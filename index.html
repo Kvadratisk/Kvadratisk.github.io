@@ -1,0 +1,256 @@
+<html>
+	<head>
+		<style type = "text/css">
+		body {
+		overflow: show;
+		}
+		#center {
+			position:relative;
+			top:5%;
+			left:5%;
+			width:90%;
+			height:90%;
+		}
+		#button {
+			position:relative;
+			padding:20px;
+			top:60px;
+		}
+		#pickupParent {
+			position:relative;
+			padding:10px;
+			height:90px;
+		}
+			#pickupChild {
+				position:relative;
+				border-radius: 15px;
+				background-color: lightgrey;
+				width: 300px;
+				border: 9px solid green;
+				outline: #000000 solid 1px;
+				padding: 10px;
+				margin: 5px;
+				float: left;
+				text-align:center;
+				display:none;
+			}
+			#pickup {
+				border-radius: 15px;
+				background-color: lightgrey;
+				width: 300px;
+				height:60px;
+				border: 9px solid green;
+				outline: #000000 solid 1px;
+				padding: 10px;
+				margin: 5px;
+				float: left;
+				text-align:center;
+			}
+		
+		#hitParent {
+			position:relative;
+			padding:10px;
+			top:10px;
+			width:50%;
+			height:90px;
+		}
+			#hitChild {
+				width:30px;
+				float: left;
+				padding:10px;
+				float: left;
+				display:none;
+			}
+			#hit {
+				background-color: lightgrey;
+				width: 300px;
+				border: 9px solid blue;
+				outline: 1px solid #000000;
+				padding: 10px;
+				margin: 5px;
+				float: left;
+				text-align:center;
+			}
+		
+		#dropParent {
+			position:relative;
+			padding:10px;
+			top:20px;
+			width:50%;
+			height:90px;
+		}
+			#dropChild {
+				width:30px;
+				float: left;
+				padding:10px;
+				float: left;
+				display:none;
+			}
+			#drop {
+				background-color: lightgrey;
+				width: 300px;
+				border: 9px solid #FF0000;
+				outline: 1px solid #000000;
+				padding: 10px;
+				margin: 5px;
+				float: left;
+				text-align:center;
+			}
+		
+		</style>
+		<title>Mod Making Made Easy</title>
+	</head>
+	<body bgcolor="#808080">
+		<canvas id = "icon" height=0px; width=0px;>Who doesn't have canvas?</canvas>
+		<div id = "center">
+			<div id ="pickupParent">
+				<div id="pickup">
+		<label for ="onPickup">Action when being added to inventory: </label>
+		<select id="onPickup" name="pickup" onchange="test(0);">
+			<option value="none" selected>Do Nothing</option>
+			<option value="applyEffects">Give Power</option>
+		</select>
+				</div>
+				<div id="pickupChild">
+		<label for ="effectType">Stat: </label>
+		<select id="effectType" name="type" onchange="test(4);">
+			<option value="none" selected>None</option>
+			<option value="damageStr">Attack</option>
+			<option value="healthStr">Health</option>
+			<option value="mpeed">Movement Speed</option>
+			<option value="gold">Gold Gain</option>
+			<option value="plat">Platinum Gain</option>
+			<option value="armor">Armor</option>
+			<option value="evade">Evade</option>
+		</select>
+		<label for ="amount">by amount: </label>
+		<input type="text" id="amount" placeholder="15" size="4"></>
+		<label for ="valType">value type: </label>
+		<select id="valType" name="amount" onchange="test(4);">
+			<option value="Additive" selected>Additive</option>
+			<option value="Multiplicative">Multiplicative</option>
+			<option value="Override">Override</option>
+		</select>
+		<input type="button" value="Add" onClick="testAdd();"></>
+				</div>
+			</div>
+			<div id="hitParent">
+				<div id="hit">
+		<label for ="onHit">Action when taking damage: </label>
+		<select id="onHit" name="hit" onchange="test(1);">
+			<option value="none" selected>Do Nothing</option>
+			<option value="modify">Change Stat</option>
+			<option value="god">Shield Damage</option>
+		</select>
+				</div>
+				<div id="hitChild">
+					<p>Test</p>
+				</div>
+			</div>
+			<div id="dropParent">
+				<div id="drop">
+		<label for ="onDrop">Action when being removed from inventory: </label>
+		<select id="onDrop" name="drop" onchange="test(2);">
+			<option value="none" selected>Do Nothing</option>
+			<option value="removeEffects">Remove Power</option>
+		</select>
+				</div>
+				<div id="dropChild">
+					<p>Test</p>
+				</div>
+			</div>
+			<div id="button">
+		<input type="button" value="Generate Code" onClick="generate();"></><br>
+		<textarea id ="result" style="display:none"></textarea>
+		<canvas id = "screen" height = 0px; width=0px;>Who doesn't have canvas enabled!?!</canvas>
+		</div>
+		</div>
+		<script>
+		const pickUpParentDiv = document.getElementById("pickupParent");
+		const onPickup = document.getElementById("onPickup");
+		const pickChild = document.getElementById("pickupChild");
+		const actType = document.getElementById("effectType");
+		const actTVal = document.getElementById("amount");
+		const actTT = document.getElementById("valType");
+		const onDrop = document.getElementById("onDrop");
+		const onHit = document.getElementById("onHit");
+		const onHeal = document.getElementById("onHeal");
+		const screen = document.getElementById("screen");
+		const icon = document.getElementById("icon");
+		const result = document.getElementById("result");
+		let hasActivate = false;
+		let hasDeactivate = false;
+		let counter = 2;
+		function testAdd(z) {
+			let [x,y] = [pickChild.scrollWidth,pickChild.scrollHeight];
+			console.log(x+":"+y);
+			pickUpParentDiv.style.background="#FF0000";
+			for (let i = 0; i < 100; i++) {
+			pickUpParentDiv.style.width=(347*counter++)+440;
+			let style = "border-radius: 15px; background-color: lightgrey; width: 300px; position:relative; border: 9px solid green; outline: #000000 solid 1px; padding: 10px; margin: 5px; float: left; text-align:center;";
+			pickUpParentDiv.innerHTML+="<div style=\""+style+"\">"+pickChild.innerHTML+"</div>";
+			}
+		}
+		function generate() {
+			result.style="height:700px; width:700px;";
+			let answer = "";
+			answer+="using System;\n";
+			answer+="using UnityEngine;\n";
+			answer+="\nnamespace mod"+Math.floor(Math.random()*100000)+"\n{\n";
+			answer+="public class MyModItem : Item\n{\n";
+			answer=generateActivate(answer);
+			answer=generateDeactivate(answer);
+			answer+="}\n}";
+			result.value=answer;
+		}
+		function generateClassVals(x) {
+			let mods = "";
+			return x;
+		}
+		function generateActivate(x) {
+		let tmp = x;
+		tmp+="public override void Activate() {\n";
+		if (hasActivate) {
+			if (!(actType.value=="none" || actTVal.value.length==0)) {
+				tmp+="StatManager.ModifyAllStatData(new NumVarStatMod(this.ID, "+(actTVal.value/100)+"f, 10, VarStatModType."+valType.value+", false), this.parentSkillCategory, StatData."+actType.value+", new StatManager.ModApplyConditional(base.IgnoreStatusConditional), true);"
+			} else {
+				alert("Some fields were left empty when expected otherwise");
+			}
+		}
+		tmp+="}\n";
+		return tmp;
+		}
+		function generateDeactivate(x) {
+		return x;
+		}
+		function test(x) {
+			switch (x) {
+			case 0:
+			changePU();
+			break;
+			case 1:
+			changeH();
+			break;
+			case 2:
+			changeD();
+			break;
+			default:
+			break;
+			}
+		}
+		
+		function changePU() {
+		let cur = onPickup.value;
+		if (cur=="none") {
+			console.log("Hide");
+			document.getElementById("pickupChild").style="display:none";
+			hasActivate=false;
+		} else if (cur=="applyEffects") {
+			console.log("Show");
+			hasActivate=true;
+			document.getElementById("pickupChild").style="display:inline; height:30%;";
+		}
+		}
+		</script>
+	</body>
+</html>
