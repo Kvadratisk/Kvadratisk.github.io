@@ -45,13 +45,9 @@
                     let outputRead = 1;
                     while (outputRead>0) {
                         let l = null;
-                        dirReader.readEntries((entries) => { console.log(entries); });
-                        while (l==null) {
-                            await delay(25);
-                        }
-                        console.log(l);
-                        outputRead = l.array.length;
-                        l.array.forEach(entry => { listAllFiles(entry); });
+                        await dirReader.readEntries((entries) => { l = entries; });
+                        outputRead = l.length;
+                        l.forEach(entry => { listAllFiles(entry); });
                     }
                 } else if (tmp.isFile) {
                     queueFiles([x.getAsFile()]);
@@ -118,7 +114,7 @@
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.00014</p>
+        <p>Hello World! v0.0.00015</p>
         <input type="button" onClick="buttonhandler();" value="Click Me"/>
         <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
         <br><span id="hexOut"></span>
