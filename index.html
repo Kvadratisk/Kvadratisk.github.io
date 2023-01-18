@@ -60,8 +60,13 @@
                         l.forEach(entry => { listAllFiles(entry,true); });
                     }
                 } else if (tmp.isFile) {
-                    console.log(x);
-                    queueFiles([x.file()]);
+                    let l = null;
+                    x.file((result) => { l = result; });
+                    while (l==null) {
+                        await delay(25);
+                    }
+                    console.log(l);
+                    queueFiles([l]);
                 }
             }
         }
