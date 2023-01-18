@@ -39,6 +39,7 @@
 
         async function listAllFiles(x) {
             console.log(x,typeof x);
+            await delay(500);
             if ((x && x.webkitGetAsEntry)) return;
             let tmp = await x.webkitGetAsEntry();
             if (tmp) {
@@ -119,7 +120,7 @@
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.00016</p>
+        <p>Hello World! v0.0.00017</p>
         <input type="button" onClick="buttonhandler();" value="Click Me"/>
         <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
         <br><span id="hexOut"></span>
