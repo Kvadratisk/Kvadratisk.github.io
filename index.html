@@ -38,6 +38,8 @@
         }
 
         async function listAllFiles(x) {
+            console.log(x,typeof x);
+            if ((x && x.webkitGetAsEntry)) return;
             let tmp = await x.webkitGetAsEntry();
             if (tmp) {
                 if (tmp.isDirectory) {
