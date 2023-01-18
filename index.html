@@ -45,7 +45,7 @@
                     let outputRead = 1;
                     while (outputRead>0) {
                         let l = null;
-                        dirReader.readEntries((entries) => { l = entries; });
+                        dirReader.readEntries((entries) => { console.log(entries); });
                         while (l==null) {
                             await delay(25);
                         }
