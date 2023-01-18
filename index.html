@@ -38,18 +38,15 @@
         }
 
         function listAllFiles(x) {
-            console.log(x);
             let tmp = x.webkitGetAsEntry();
-            console.log(tmp);
             if (tmp) {
             if (tmp.isDirectory) {
-                let dirReader = tmp.createReader();
-                console.log(dirReader);
+                let dirReader = tmp.createReader(); 
                 let outputRead = 1;
                 while (outputRead>0) {
-                    let tmp = dirReader.readEntries();
-                    outputRead = tmp.length;
-                    tmp.array.forEach(entry => { listAllFiles(entry); });
+                    dirReader.readEntries((entries) => {
+                    outputRead = entries.array.length;
+                    entries.array.forEach(entry => { listAllFiles(entry); });});
                 }
             } else if (tmp.isFile) {
                 queueFiles([x.getAsFile()]);
@@ -116,7 +113,7 @@
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.00012</p>
+        <p>Hello World! v0.0.00013</p>
         <input type="button" onClick="buttonhandler();" value="Click Me"/>
         <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
         <br><span id="hexOut"></span>
