@@ -1,381 +1,105 @@
 <html>
-	<head>
-		<title>Paint</title>
-	</head>
-	<body bgcolor="#808080">
-	<div id="imagepainter" style="transform:translate(-50%,-0%); position:relative; left:50%;">
-	<div id="border" style="overflow:auto; border-radius:10px; background:#000000; padding:10px; width:80%; height:80%;">
-	<canvas id="screen" onmousemove="precalc(event);" onclick="setpixels(event);">Sorry, you don't have canvas</canvas></div>
-	<div id="smoother" style="position:relative; bottom:10px; background:#000000; padding:10px; width:var(--override,80%); height:0px;">
-	</div>
-	<div id="options" style="overflow:auto; position:relative; left:0px; bottom:20px; width:var(--override,80%); height:20%; border:10px solid #000000; border-radius:10px; background:#00FF00;">
-	<input type="range" value=16 min=1 max=32 id="width"><span id="widthVal">Width: 16px</span>
-	<input type="range" value=16 min=1 max=32 id="height"><span id="heightVal">Height: 16px</span>
-	</div><input type="button" value="Generate" onClick="updateColors();"><textarea style="display:none" id="colorout"></textarea>
-	</div>
-	<script>
-	var hasReset=false;
-	function precalc(e) {
-		if (points.length!=1) {if (hasReset) { redraw(); hasReset=false; } return};
-		let [x,y] = [Math.floor(e.offsetX/squareX),Math.floor(e.offsetY/squareY)];
-		x=Math.min(x,targetWidth-1);
-		y=Math.min(y,targetHeight-1);
-		let tmpK = new Uint8Array(imgLst);
-		tmpK.set=imgLst.set;
-		tmpK.get=imgLst.get;
-		let preserve = [pcols[curPal],points];
-		pcols[curPal]="40FFFFD0";
-		if (drawMode==1) {
-		drawLine(points[0][0],points[0][1],x,y);
-		} else {
-		drawRectangle(points[0][0],points[0][1],x,y);
-		}
-		pcols[curPal]=preserve[0];
-		redraw();
-		points=preserve[1];
-		drawMarker(points[0][0],points[0][1]);
-		imgLst=tmpK;
-		hasReset=true;
-	}
-	function drawMarker(x,y) {
-		draw.fillStyle="#00FFFF";
-		draw.fillRect(x*squareX+2,y*squareY+2,squareX-4,squareY-4);
-		draw.fillStyle="#000000FF";
-		draw.fillRect(x*squareX+5,y*squareY+5,squareX-10,squareY-10);
-	}
-	var pcols=["FFFFFFFF","FF0000FF","D5761DFF","FFFF00FF","82FF23FF","00FF00FF","FF30FFFF","00FFFFFF","0000FFFF","8137FFFF","000000FF"];
-	let boxes = [];
-	let coloringmodes=[];
-	var curPal=0;
-	let drawMode=0;
-	const widthVal = document.getElementById("widthVal");
-	const heightVal = document.getElementById("heightVal");
-	const widthRange = document.getElementById("width");
-	const heightRange = document.getElementById("height");
-	widthRange.oninput = function() {
-		targetWidth=this.value;
-		widthVal.innerHTML="Width: "+this.value+"px";
-		let tmp = new ImageData(targetWidth,targetHeight);
-		let tmp1 = tmp.data;
-		tmp1.set=imgLst.set;
-		tmp1.get=imgLst.get;
-		imgData=tmp;
-		imgLst=tmp1;
-		resized();
-	}
-	heightRange.oninput = function() {
-		targetHeight=this.value;
-		heightVal.innerHTML="Height: "+this.value+"px";
-		let tmp = new ImageData(targetWidth,targetHeight);
-		let tmp1 = tmp.data;
-		tmp1.set=imgLst.set;
-		tmp1.get=imgLst.get;
-		imgData=tmp;
-		imgLst=tmp1;
-		resized();
-	}
-	let [targetWidth,targetHeight] = [16,16];
-	const canvas = document.getElementById("screen");
-	const preview = document.getElementById("preview");
-	const border = document.getElementById("border");
-	canvas.width=border.clientWidth-20;
-	canvas.height=border.clientHeight-20;
-	var imgData = new ImageData(targetWidth,targetHeight);
-	var imgLst = imgData.data;
-	imgLst.set = function(posX,posY,r,g,b,a=255) {
-		let base = (posY*targetWidth+posX)*4;
-		if (a<255) {
-			a=(a/255);
-			imgLst[base]=r+(r-imgLst[base])*a;
-			imgLst[base+1]=g+(g-imgLst[base+1])*a;
-			imgLst[base+2]=b+(b-imgLst[base+2])*a;
-			imgLst[base+3]=255;//((1-a)*255);
-			return;
-		}
-		imgLst[base]=r;
-		imgLst[base+1]=g;
-		imgLst[base+2]=b;
-		imgLst[base+3]=a;
-	}
-	imgLst.get = function (posX,posY) {
-		return imgLst[(posY*targetWidth+posX)*4]<<24|imgLst[(posY*targetWidth+posX)*4+1]<<16|imgLst[(posY*targetWidth+posX)*4+2]<<8|imgLst[(posY*targetWidth+posX)*4+3];
-	}
-	var [width,height] = [canvas.width,canvas.height];
-	if (width<height) {
-		height=width;
-	} else {
-		width=height;
-	}
-	let [squareX,squareY] = [Math.floor(width/targetWidth),Math.floor(width/targetHeight)];
-	if (squareX<16) {
-		squareX=16;
-	}
-	if (squareY<16) {
-		squareY=16;
-	}
-	//canvas.width=squareX*targetWidth+220;
-	//canvas.height=squareY*targetHeight;
-	//if (canvas.width<border.clientWidth-20) {
-	//border.style.width=canvas.width+10;
-	//}
-	//if (canvas.height<border.clientHeight-20) {
-	//border.style.height=canvas.height+10;
-	//}
-	//document.getElementById("smoother").style.setProperty("--override",border.style.width);
-	//document.getElementById("options").style.setProperty("--override",border.style.width);
-	if (canvas.width<squareX*targetWidth+220) {
-	canvas.width=squareX*targetWidth+220;
-	}
-	if (canvas.height<(((Math.round(pcols.length/2)*50)+50))) {
-	canvas.height=((Math.round(pcols.length/2)*50)+50);
-	}
-	[width,height] = [canvas.width,canvas.height];
-	const draw = canvas.getContext("2d");
-	draw.fillStyle="#404040";
-	draw.fillRect(0,0,canvas.width,canvas.height);
-	window.addEventListener("resize",resized);
-	displayColorPallete();
-	draw.fillStyle="#FFFFFFFF";
-	function resized() {
-	points=[];
-	[border.style.width,border.style.height]=["80%","80%"];
-	canvas.width=border.offsetWidth-20;
-	canvas.height=border.offsetHeight-20;
-	[offsetX,offsetY] = [canvas.getBoundingClientRect().x,canvas.getBoundingClientRect().y];
-	[width,height] = [canvas.width,canvas.height];
-	if (width<height) {
-		height=width;
-	} else {
-		width=height;
-	}
-	[squareX,squareY] = [Math.floor(width/targetWidth),Math.floor(width/targetHeight)];
-	if (squareX<squareY) {
-		squareY=squareX;
-	} else {
-		squareX=squareY;
-	}
-	if (squareX<16) {
-		canvas.width=16*targetWidth;
-		squareX=16;
-	}
-	if (squareY<16) {
-		canvas.height=16*targetHeight;
-		squareY=16;
-	}
-	if (canvas.width<squareX*targetWidth+220) {
-	canvas.width=squareX*targetWidth+220;
-	}
-	if (canvas.height<((pcols.length*50)+50)) {
-	canvas.height=((pcols.length*50)+50);
-	}
-	//canvas.height=squareY*targetHeight;
-	document.getElementById("smoother").style.setProperty("--override",border.style.width);
-	document.getElementById("options").style.setProperty("--override",border.style.width);
-	[width,height] = [canvas.width,canvas.height];
-	draw.fillStyle="#404040";
-	draw.fillRect(0,0,canvas.width,canvas.height);
-	redraw();
-	}
-	function redraw() {
-		draw.fillStyle="#404040";
-		draw.fillRect(0,0,canvas.width,canvas.height);
-		let [x,y]=[0,0];
-		for (let i = 0; i < Math.round(imgLst.length/4); i++) {
-			draw.fillStyle="#"+((imgLst[i*4].toString(16).length>1?imgLst[i*4].toString(16):"0"+imgLst[i*4].toString(16))+(imgLst[i*4+1].toString(16).length>1?imgLst[i*4+1].toString(16):"0"+imgLst[i*4+1].toString(16))+(imgLst[i*4+2].toString(16).length>1?imgLst[i*4+2].toString(16):"0"+imgLst[i*4+2].toString(16))+(imgLst[i*4+3].toString(16).length>1?imgLst[i*4+3].toString(16):"0"+imgLst[i*4+3].toString(16)));
-			draw.fillRect(x++*squareX,y*squareY,squareX,squareY);
-			if (x>=targetWidth) {
-				x=0;
-				y++;
-			}
-		}
-		displayColorPallete();
-		draw.fillStyle="#FFFFFFFF";
-	}
-	let points = [];
-	function setpixels(e) {
-		let [x,y] = [Math.floor(e.offsetX/squareX),Math.floor(e.offsetY/squareY)];
-		if (e.offsetX>=targetWidth*squareX || e.offsetY>=targetHeight*squareY) { palhandle(e.offsetX,e.offsetY); return;};
-		switch (drawMode) {
-		case 0:
-		let tmpnum = parseInt(pcols[curPal],16);//parseInt(draw.fillStyle.substring(1),16);
-		imgLst.set(x,y,tmpnum>>24&0xFF,tmpnum>>16&0xFF,tmpnum>>8&0xFF,tmpnum&0xFF);
-		draw.fillStyle="#"+pcols[curPal];
-		draw.fillRect(x*squareX,y*squareY,squareX,squareY);
-		break;
-		case 1:
-			drawMarker(x,y);
-			points[points.length]=[x,y];
-			if (points.length>1) { drawLine(points[0][0],points[0][1],points[1][0],points[1][1]);} 
-			break;
-		case 2:
-			drawMarker(x,y);
-			points[points.length]=[x,y];
-			if (points.length>1) { drawRectangle(points[0][0],points[0][1],points[1][0],points[1][1]);} 
-			break;
-		case 3:
-			fill(x,y);
-			break;
-		default:
-		break;
-		}
-	}
-	function palhandle(x,y) {
-		for (let i = 0; i < coloringmodes.length; i++) {
-			if ((x>coloringmodes[i][0][0] && x<coloringmodes[i][1][0])&&(y>coloringmodes[i][0][1] && y<coloringmodes[i][1][1])) {drawMode=i; return;};
-		}
-		//if (drawMode!=0) return;
-		for (let i = 0; i < boxes.length; i++) {
-			if ((x>boxes[i][0][0] && x<boxes[i][1][0])&&(y>boxes[i][0][1] && y<boxes[i][1][1])) {curPal=i; break;};
-		}
-	}
-	function displayColorPallete() {
-		draw.fillStyle="#000000";
-		draw.fillRect(targetWidth*squareX,0,5,targetHeight*squareY+5);
-		draw.fillRect(0,targetHeight*squareY,targetWidth*squareX+5,5);
-		let [x,y]=[targetWidth*squareX+20,20];
-		for (let i = 0; i < Math.floor(pcols.length/2); i++) {
-		boxes[i*2]=[[x-4,y-4],[x+40,y+40]];
-		draw.fillStyle="#"+invertcolor(pcols[i*2]);
-		draw.fillRect(x-4,y-4,40,40);
-		draw.fillStyle="#"+pcols[i*2];
-		draw.fillRect(x,y,32,32);
-		x+=50;
-		boxes[i*2+1]=[[x-4,y-4],[x+40,y+40]];
-		draw.fillStyle="#"+invertcolor(pcols[i*2+1]);
-		draw.fillRect(x-4,y-4,40,40);
-		draw.fillStyle="#"+pcols[i*2+1];
-		draw.fillRect(x,y,32,32);
-		x-=50;
-		y+=50;
-		}
-		if (pcols.length%2==1) {
-		i=pcols.length-1;
-		boxes[i]=[[x-4,y-4],[x+40,y+40]];
-		draw.fillStyle="#"+invertcolor(pcols[i]);
-		draw.fillRect(x-4,y-4,40,40);
-		draw.fillStyle="#"+pcols[i];
-		draw.fillRect(x,y,32,32);
-		x+=50;
-		}
-		x-=50;
-		y+=50;
-		draw.fillStyle="#000000";
-		draw.fillRect(x-4,y-4,90,40);
-		draw.fillStyle="#F0F0F0";
-		draw.fillRect(x-2,y-2,86,36);
-		draw.fillStyle="#000000";
-		draw.fillRect(x+29,y+6,24,24);
-		coloringmodes[0]=[[x-2,y-2],[x+86,y+36]];
-		y+=50;
-		draw.fillStyle="#000000";
-		draw.fillRect(x-4,y-4,90,40);
-		draw.fillStyle="#F0F0F0";
-		draw.fillRect(x-2,y-2,86,36);
-		draw.fillStyle="#000000";
-		draw.fillRect(x+6,y+8,16,16);
-		draw.fillRect(x+60,y+8,16,16);
-		draw.fillRect(x+22,y+14,38,4);
-		coloringmodes[1]=[[x-2,y-2],[x+86,y+36]];
-		y+=50;
-		draw.fillStyle="#000000";
-		draw.fillRect(x-4,y-4,90,40);
-		draw.fillStyle="#F0F0F0";
-		draw.fillRect(x-2,y-2,86,36);
-		draw.fillStyle="#000000";
-		draw.fillRect(x+2,y+2,8,8);
-		draw.fillRect(x+72,y+22,8,8);
-		draw.fillRect(x+10,y+4,68,4);
-		draw.fillRect(x+5,y+8,4,20);
-		draw.fillRect(x+5,y+24,68,4);
-		draw.fillRect(x+74,y+8,4,20);
-		coloringmodes[2]=[[x-2,y-2],[x+86,y+36]];
-		y+=50;
-		draw.fillStyle="#000000";
-		draw.fillRect(x-4,y-4,90,40);
-		draw.fillStyle="#F0F0F0";
-		draw.fillRect(x-2,y-2,86,36);
-		draw.fillStyle="#000000";
-		draw.fillRect(x+2,y+2,78,28);
-		coloringmodes[3]=[[x-2,y-2],[x+86,y+36]];
-		y+=50;
-	}
-	function invertcolor(x) {
-		let i = parseInt(x,16);
-		let l = (255-(i>>24&0xFF)).toString(16).length>1?(255-(i>>24&0xFF)).toString(16):"0"+(255-(i>>24&0xFF)).toString(16);
-		l += (255-(i>>16&0xFF)).toString(16).length>1?(255-(i>>16&0xFF)).toString(16):"0"+(255-(i>>16&0xFF)).toString(16);
-		l += (255-(i>>8&0xFF)).toString(16).length>1?(255-(i>>8&0xFF)).toString(16):"0"+(255-(i>>8&0xFF)).toString(16);
-		l += "FF";
-		return l;
-	}
-	function updateColors() {
-	return;
-	document.getElementById("colorout").style="";
-	document.getElementById("colorout").value="";//uintToColor(imgData.data);
-	}
-	function drawLine(x0,y0,x1,y1) {
-	var dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-	var dy = Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1; 
-	var err = (dx>dy ? dx : -dy)/2;
-	while (true) {
-	let tmpnum = parseInt(pcols[curPal],16);
-	imgLst.set(x0,y0,tmpnum>>24&0xFF,tmpnum>>16&0xFF,tmpnum>>8&0xFF,tmpnum&0xFF);
-    if (x0 === x1 && y0 === y1) break;
-    var e2 = err;
-    if (e2 > -dx) { err -= dy; x0 += sx; }
-    if (e2 < dy) { err += dx; y0 += sy; }
-	}
-	redraw();
-  points=[];
-  return;
-  }
-  function drawRectangle(x0,y0,x1,y1) {
-		if (x0>x1) {let tmp = x0; x0=x1; x1=tmp;}
-		if (y0>y1) {let tmp = y0; y0=y1; y1=tmp;}
-		for (let x = x0; x <= x1; x++) {
-			for (let y = y0; y <= y1; y++) {
-				let tmpnum = parseInt(pcols[curPal],16);//parseInt(draw.fillStyle.substring(1),16);
-				imgLst.set(x,y,tmpnum>>24&0xFF,tmpnum>>16&0xFF,tmpnum>>8&0xFF,tmpnum&0xFF);
-			}
-		}
-		redraw();
-		points=[];
-	}
-	function fill(x,y) {
-		let tmpnum = parseInt(pcols[curPal],16);
-		let base = imgLst.get(x,y);
-		tmpnum=tmpnum|0xFF;
-		base=base|0x00;
-		if (base==tmpnum) return;
-		let start = [[x,y]];
-		imgLst.set(x,y,tmpnum>>24&0xFF,tmpnum>>16&0xFF,tmpnum>>8&0xFF,tmpnum&0xFF);
-		if (!findSameNear(x,y,base)) {redraw(); return}
-		for (let i = 0; i < Math.min(start.length,1000); i++) {
-			let c = findSameNear(start[i][0],start[i][1],base);
-			if (c==false) continue;
-			for (let l = 0; l < c.length; l++) {
-				if(start.includes(c[l])) continue;
-				start[start.length]=c[l];
-				imgLst.set(c[l][0],c[l][1],tmpnum>>24&0xFF,tmpnum>>16&0xFF,tmpnum>>8&0xFF,tmpnum&0xFF);
-			}
-			start=start.slice(i);
-			i=0;
-		}
-		redraw();
-	}
-	function findSameNear(x,y,z) {
-		let colors=[];
-		if (x>0 && (z==imgLst.get(x-1,y))) {colors[colors.length]=[x-1,y];}
-		if (y>0 && (z==imgLst.get(x,y-1))) {colors[colors.length]=[x,y-1];}
-		if (x<targetWidth-1 && (z==imgLst.get(x+1,y))) {colors[colors.length]=[x+1,y];}
-		if (y<targetHeight-1 && (z==imgLst.get(x,y+1))) {colors[colors.length]=[x,y+1];}
-		if (colors.length==0) return false;
-		return colors;
-	}
-	function canvasButton(x,y) {
-	}
-	function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-		}
-	</script>
-	</body>
+    <head>
+        <script src="globals.js" type="text/JavaScript"></script>
+        <script src="fileIO.js" type="text/javascript"></script>
+        <script src="connectivity.js" type="text/JavaScript"></script>
+        <script src="executables.js" type="text/JavaScript"></script>
+        <script src="code.js" type="text/JavaScript"></script>
+        <script id="null1"></script>
+        <link rel="stylesheet" href="style.css" type="text/css">
+        <title>FPS</title>
+    </head>
+    <body ondrag="drag(event)" ondragend="dragend(event)" ondragstart="dragstart(event)" ondragover="dragover(event)" ondragleave="dragleave(event)" ondragenter="dragenter(event)" ondrop="drop(event)" onkeypress="cancel(event);">
+        <div class="toolbar"></div>
+        <script src="fps.js"></script>
+        <script>
+        function cancel(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        function drag(e) {
+            cancel(e);
+        }
+        function dragend(e) {
+            cancel(e);
+        }
+        function dragenter(e) {
+            e.dataTransfer.dropEffect = "copy";
+            cancel(e);
+        }
+        function dragleave(e) {
+            cancel(e);
+        }
+        function dragover(e) {
+            cancel(e);
+        }
+        function dragstart(e) {
+            cancel(e);
+        }
+        function drop(e) {
+            if (e.dataTransfer && e.dataTransfer.items) {
+                let tmpOut = [];
+                for (let i = 0; i < e.dataTransfer.items.length; i++) {
+                    if (typeof e.dataTransfer.items[i].webkitGetAsEntry != "function") continue;
+                    let tmp = e.dataTransfer.items[i].webkitGetAsEntry();
+                    console.log(tmp);
+                    if (!(tmp && tmp.isFile)) continue;
+                    tmpOut[tmpOut.length] = e.dataTransfer.items[i].getAsFile();
+                }
+                queueFiles(tmpOut);
+            }
+            cancel(e);
+        }
+        function tmpDelay(x) {return new Promise(resolve => setTimeout(resolve,x));}
+        var elemArray = [];
+        async function loadScriptAsync(name) {
+            let tmp = document.createElement("script");
+            tmp.id=name;
+            tmp.innerText="function helloWorld(x) {console.log(512,x);}";
+            document.body.appendChild(tmp);
+            elemArray[name]=tmp;
+        }
+        async function deleteScript(name) {
+            let tmp = Array.from(document.querySelectorAll("script[type='text/javascript']")).filter(r => r.id === name);
+            for (let i = 0; i < tmp.length; i++) {
+                let trp = tmp[i];
+                trp.parentNode.removeChild(trp);
+                trp.remove();
+            }
+        }
+
+        async function test() {
+            let tmp = await fetchAsyncReader("https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_960_720.jpg");
+            //download(tmp,"Test.jpg");
+        }
+        test();
+        
+        function buttonhandler() {
+            if (document.fullscreenElement==null) {
+                document.exitPointerLock();
+                document.body.requestFullscreen();
+                document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+                document.body.requestPointerLock();
+            } else {
+                document.exitFullscreen();
+                document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+                document.exitPointerLock();
+            }
+        }
+        var isWorking = false;
+        async function fileHandler(e) {
+            let tmp = document.getElementById("inputFile").files;
+            if (!isWorking && tmp[0].name.includes(".mp3")) {
+                isWorking=true;
+                playSoundFile(tmp[0]);
+            }
+            queueFiles(tmp);
+        }
+        </script>
+        <div id="fps"><span id="fpsCounter"></span></div>
+        <p>Hello World!</p>
+        <input type="button" onClick="buttonhandler();" value="Click Me"/>
+        <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
+        <br><span id="hexOut"></span>
+    </body>
 </html>
