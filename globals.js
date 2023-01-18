@@ -1,3 +1,4 @@
+const defaultPath = "A:/";
 const enums = {
     magicNumbers : {
         mz : 0x4D5A,
@@ -22,12 +23,16 @@ async function queueFiles(tmp=null) {
         let tmpObj = {
             name : tmp[i].name,
             lastModified : tmp[i].lastModified,
-            data : new Uint8Array(await toArrayBuffer(tmp[i]))
+            data : new Uint8Array(await toArrayBuffer(tmp[i])),
+            path : defaultPath
         };
+        if (tmp[i].customPath) {
+            tmpObj.path = tmp[i].customPath;
+        }
         if (globalFilesQueue.includes(tmpObj)) continue;
         globalFilesQueue[globalFilesQueue.length] = tmpObj;
     }
-    console.log(globalFilesQueue.length);
+    console.log(globalFilesQueue);
 }
 /*
 function fastGetFileType(raw) {
