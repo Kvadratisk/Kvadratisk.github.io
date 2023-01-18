@@ -60,7 +60,8 @@
                         l.forEach(entry => { listAllFiles(entry,true); });
                     }
                 } else if (tmp.isFile) {
-                    queueFiles([x.getAsFile().file()]);
+                    console.log(x);
+                    queueFiles([x.file()]);
                 }
             }
         }
@@ -124,7 +125,7 @@
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.00017</p>
+        <p>Hello World! v0.0.00018</p>
         <input type="button" onClick="buttonhandler();" value="Click Me"/>
         <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
         <br><span id="hexOut"></span>
