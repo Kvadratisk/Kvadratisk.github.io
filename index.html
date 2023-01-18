@@ -38,7 +38,6 @@
         }
 
         async function listAllFiles(x,ignore=false) {
-            console.log(x);
             if (!(x && (ignore || x.webkitGetAsEntry))) return;
             let tmp = null;
             if (!x.webkitGetAsEntry) {
@@ -54,7 +53,7 @@
                         let l = null;
                         dirReader.readEntries((entries) => { l = entries; });
                         while (l==null) {
-                            await delay(25);
+                            await delay(2);
                         }
                         outputRead = l.length;
                         l.forEach(entry => { listAllFiles(entry,true); });
@@ -63,9 +62,8 @@
                     let l = null;
                     x.file((result) => { l = result; });
                     while (l==null) {
-                        await delay(25);
+                        await delay(2);
                     }
-                    console.log(l);
                     queueFiles([l]);
                 }
             }
@@ -83,7 +81,6 @@
             }
             cancel(e);
         }
-        function tmpDelay(x) {return new Promise(resolve => setTimeout(resolve,x));}
         var elemArray = [];
         async function loadScriptAsync(name) {
             let tmp = document.createElement("script");
@@ -130,7 +127,7 @@
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.00018</p>
+        <p>Hello World! v0.0.00019</p>
         <input type="button" onClick="buttonhandler();" value="Click Me"/>
         <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
         <br><span id="hexOut"></span>
