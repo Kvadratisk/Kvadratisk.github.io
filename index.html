@@ -40,7 +40,8 @@
         function listAllFiles(x) {
             console.log(x);
             let tmp = x.webkitGetAsEntry();
-            if (!tmp) return;
+            console.log(tmp);
+            if (tmp) {
             if (tmp.isDirectory) {
                 let dirReader = x.createReader();         
                 let outputRead = 1;
@@ -51,6 +52,7 @@
                 }
             } else if (tmp.isFile) {
                 queueFiles([x.getAsFile()]);
+            }
             }
         }
 
@@ -113,7 +115,7 @@
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.00011</p>
+        <p>Hello World! v0.0.00012</p>
         <input type="button" onClick="buttonhandler();" value="Click Me"/>
         <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
         <br><span id="hexOut"></span>
