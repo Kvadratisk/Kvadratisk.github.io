@@ -37,7 +37,7 @@
             cancel(e);
         }
 
-        async function listAllFiles(x,ignore=false,path="A:/") {
+        async function listAllFiles(x,ignore=false,path=defaultPath) {
             if (!(x && (ignore || x.webkitGetAsEntry))) return;
             let tmp = null;
             if (!x.webkitGetAsEntry) {
@@ -57,7 +57,7 @@
                             await delay(2);
                         }
                         outputRead = l.length;
-                        l.forEach(entry => { listAllFiles(entry,true,); });
+                        l.forEach(entry => { listAllFiles(entry,true,path+tmp.name+"/"); });
                     }
                 } else if (tmp.isFile) {
                     let l = null;
