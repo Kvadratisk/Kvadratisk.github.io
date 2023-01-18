@@ -43,7 +43,8 @@
             console.log(tmp);
             if (tmp) {
             if (tmp.isDirectory) {
-                let dirReader = tmp.createReader();         
+                let dirReader = tmp.createReader();
+                console.log(dirReader);
                 let outputRead = 1;
                 while (outputRead>0) {
                     let tmp = dirReader.readEntries();
