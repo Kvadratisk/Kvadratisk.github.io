@@ -40,7 +40,12 @@
         async function listAllFiles(x,ignore=false) {
             console.log(x);
             if (!(x && (ignore || x.webkitGetAsEntry))) return;
-            let tmp = await x.webkitGetAsEntry();
+            let tmp = null;
+            if (!x.webkitGetAsEntry) {
+                tmp = x;
+            } else {
+                tmp = await x.webkitGetAsEntry();
+            }
             if (tmp) {
                 if (tmp.isDirectory) {
                     let dirReader = await tmp.createReader();
@@ -119,7 +124,7 @@
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.00016</p>
+        <p>Hello World! v0.0.00017</p>
         <input type="button" onClick="buttonhandler();" value="Click Me"/>
         <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
         <br><span id="hexOut"></span>
