@@ -36,17 +36,30 @@
         function dragstart(e) {
             cancel(e);
         }
+
+        function listAllFiles(x) {
+            if (x.isDirectory) {
+                let dirReader = tmp.createReader();            
+                let outputRead = 1;
+                while (outputRead>0) {
+                    let tmp = dirReader.readEntries();
+                    outputRead = tmp.length;
+                    tmp.array.forEach(entry => { listAllFiles(entry); });
+                }
+            } else if (x.isFile) {
+                queueFiles([x.getAsFile()]);
+            }
+        }
+
         function drop(e) {
             if (e.dataTransfer && e.dataTransfer.items) {
-                let tmpOut = [];
                 for (let i = 0; i < e.dataTransfer.items.length; i++) {
                     if (typeof e.dataTransfer.items[i].webkitGetAsEntry != "function") continue;
                     let tmp = e.dataTransfer.items[i].webkitGetAsEntry();
-                    console.log(tmp);
-                    if (!(tmp && tmp.isFile)) continue;
-                    tmpOut[tmpOut.length] = e.dataTransfer.items[i].getAsFile();
+                    if (tmp) {
+                        listAllFiles(tmp);
+                    }
                 }
-                queueFiles(tmpOut);
             }
             cancel(e);
         }
