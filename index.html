@@ -38,6 +38,7 @@
         }
 
         function listAllFiles(x) {
+            console.log(x);
             let tmp = x.webkitGetAsEntry();
             if (!tmp) return;
             if (tmp.isDirectory) {
@@ -59,7 +60,7 @@
                     if (typeof e.dataTransfer.items[i].webkitGetAsEntry != "function") continue;
                     let tmp = e.dataTransfer.items[i].webkitGetAsEntry();
                     if (tmp) {
-                        listAllFiles(tmp);
+                        listAllFiles(e.dataTransfer.items[i]);
                     }
                 }
             }
@@ -112,7 +113,7 @@
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.0001</p>
+        <p>Hello World! v0.0.00011</p>
         <input type="button" onClick="buttonhandler();" value="Click Me"/>
         <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
         <br><span id="hexOut"></span>
