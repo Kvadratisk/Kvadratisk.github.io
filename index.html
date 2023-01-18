@@ -40,18 +40,22 @@
         async function listAllFiles(x) {
             let tmp = await x.webkitGetAsEntry();
             if (tmp) {
-            if (tmp.isDirectory) {
-                let dirReader = await tmp.createReader();
-                let outputRead = 1;
-                while (outputRead>0) {
-                    let l = null;
-                    await dirReader.readEntries((entries) => { l = entries });
-                    outputRead = l.array.length;
-                    l.array.forEach(entry => { listAllFiles(entry); });
+                if (tmp.isDirectory) {
+                    let dirReader = await tmp.createReader();
+                    let outputRead = 1;
+                    while (outputRead>0) {
+                        let l = null;
+                        dirReader.readEntries((entries) => { l = entries; });
+                        while (l==null) {
+                            await delay(25);
+                        }
+                        console.log(l);
+                        outputRead = l.array.length;
+                        l.array.forEach(entry => { listAllFiles(entry); });
+                    }
+                } else if (tmp.isFile) {
+                    queueFiles([x.getAsFile()]);
                 }
-            } else if (tmp.isFile) {
-                queueFiles([x.getAsFile()]);
-            }
             }
         }
 
