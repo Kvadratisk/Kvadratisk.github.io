@@ -5,12 +5,17 @@
         <script src="connectivity.js" type="text/JavaScript"></script>
         <script src="executables.js" type="text/JavaScript"></script>
         <script src="code.js" type="text/JavaScript"></script>
-        <script id="null1"></script>
         <link rel="stylesheet" href="style.css" type="text/css">
         <title>FPS</title>
     </head>
     <body ondrag="drag(event)" ondragend="dragend(event)" ondragstart="dragstart(event)" ondragover="dragover(event)" ondragleave="dragleave(event)" ondragenter="dragenter(event)" ondrop="drop(event)" onkeypress="cancel(event);">
         <div class="toolbar"></div>
+        <div class = "dropArea">
+            <input type="file" id="inputFile" onchange="fileHandler(event)" multiple/>
+            <span>Drag and Drop files here</span>
+            <input type="hidden" id="action" onClick="publicize()"/>
+            <div id="stripFlag"><label>Strip<input id="strip" type="checkbox"/></label></div>
+        </div>
         <script src="fps.js"></script>
         <script>
         function cancel(e) {
@@ -60,7 +65,7 @@
                     }
                 } else if (tmp.isFile) {
                     let l = null;
-                    x.file((result) => { l = result; });
+                    tmp.file((result) => { l = result; });
                     while (l==null) {
                         await delay(2);
                     }
@@ -80,11 +85,13 @@
                     }
                 }
             }
+            setTimeout(processFiles,100);
             cancel(e);
         }
         var elemArray = [];
         async function loadScriptAsync(name) {
             let tmp = document.createElement("script");
+            tmp.type="text/javascript";
             tmp.id=name;
             tmp.innerText="function helloWorld(x) {console.log(512,x);}";
             document.body.appendChild(tmp);
@@ -124,13 +131,11 @@
                 isWorking=true;
                 playSoundFile(tmp[0]);
             }
-            queueFiles(tmp);
+            await queueFiles(tmp);
+            processFiles();
         }
         </script>
         <div id="fps"><span id="fpsCounter"></span></div>
-        <p>Hello World! v0.0.00020</p>
-        <input type="button" onClick="buttonhandler();" value="Click Me"/>
-        <input multiple type="file" id="inputFile" onchange="fileHandler(event)"/>
-        <br><span id="hexOut"></span>
+        <div class = "credits"><span>v0.0.00021</span></div>
     </body>
 </html>
