@@ -3,6 +3,14 @@ html, body {
     margin:0px;
 }
 
+.dropArea > input {
+    position:relative;
+    background-color: #202020;
+    color: var(--text);
+    width:100%;
+    height:25%;
+}
+
 :root {
     --bg-primary:#606060;
     --bg-secondary:#404040;
@@ -46,6 +54,10 @@ body {
     --toolWidth:4em;
 }
 
+#stripFlag {
+    display:none;
+}
+
 #fps {
     position: absolute;
     cursor: move;
@@ -70,10 +82,21 @@ body {
     background-color: aliceblue;
 }
 
-#dropZone {
+.dropArea {
     position: relative;
     top:10%;
     left:10%;
+    padding:4px;
     background-color: black;
-    width:50%;
+    width:12em;
+    height:6em;
+    border-radius:8px;
+    border: 2px solid blue;
+}
+.credits {
+    position:absolute;
+    bottom: 0px;
+    right:0px;
+    color: #20FF20;
+    background-color: black;
 }
