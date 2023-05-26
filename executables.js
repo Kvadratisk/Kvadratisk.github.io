@@ -123,7 +123,7 @@ class PortableExecutable {
             SizeOfOptionalHeader : readByte(2),
             Characteristics  : readByte(2)
         };
-        console.log(enums.machineTypes[coffHeader.Machine]);
+        //console.log(enums.machineTypes[coffHeader.Machine]);
         this.coffHeader = coffHeader;
         let optionalHeader = null;
         if (isImage) {
