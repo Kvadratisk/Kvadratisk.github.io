@@ -288,7 +288,7 @@ function toRobeFile() {
     let text = bufferCanvas.toDataURL();
     let seperator = "***BREAK***";
     text=text.slice(text.indexOf("base64,")+7);
-    text=document.getElementById("displayName").value+seperator+document.getElementById("description").seperator+seperator+document.getElementById("designer").value+seperator+text;
+    text=document.getElementById("displayName").value+seperator+document.getElementById("description").value+seperator+document.getElementById("designer").value+seperator+text;
     let blob = new Blob([text]);
     let a = document.createElement("a");
     a.download=document.getElementById("displayName").value+".robe";
