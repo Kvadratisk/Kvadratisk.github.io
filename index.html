@@ -58,6 +58,7 @@ window.onload = function(){
     for (let i = 0; i < imageHeight*imageWidth; i++) {
         testImageIndexArray[testImageIndexArray.length]=testImage[tmpCount++];
     }
+    testImageIndexArray=new Uint8Array(testImageIndexArray);
     /*
     let tmpList15 = [];
     let tmpList16 = [];
