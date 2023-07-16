@@ -1,0 +1,141 @@
+<html>
+    <head>
+        <script src="globals.js" type="text/JavaScript"></script>
+        <script src="fileIO.js" type="text/javascript"></script>
+        <script src="connectivity.js" type="text/JavaScript"></script>
+        <script src="executables.js" type="text/JavaScript"></script>
+        <script src="code.js" type="text/JavaScript"></script>
+        <link rel="stylesheet" href="style.css" type="text/css">
+        <title>FPS</title>
+    </head>
+    <body ondrag="drag(event)" ondragend="dragend(event)" ondragstart="dragstart(event)" ondragover="dragover(event)" ondragleave="dragleave(event)" ondragenter="dragenter(event)" ondrop="drop(event)" onkeypress="cancel(event);">
+        <div class="toolbar"></div>
+        <div class = "dropArea">
+            <input type="file" id="inputFile" onchange="fileHandler(event)" multiple/>
+            <span>Drag and Drop files here</span>
+            <input type="hidden" id="action" onClick="publicize()"/>
+            <div id="stripFlag"><label>Strip<input id="strip" type="checkbox"/></label></div>
+        </div>
+        <script src="fps.js"></script>
+        <script>
+        function cancel(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        function drag(e) {
+            cancel(e);
+        }
+        function dragend(e) {
+            cancel(e);
+        }
+        function dragenter(e) {
+            e.dataTransfer.dropEffect = "copy";
+            cancel(e);
+        }
+        function dragleave(e) {
+            cancel(e);
+        }
+        function dragover(e) {
+            cancel(e);
+        }
+        function dragstart(e) {
+            cancel(e);
+        }
+
+        async function listAllFiles(x,ignore=false,path=defaultPath) {
+            if (!(x && (ignore || x.webkitGetAsEntry))) return;
+            let tmp = null;
+            if (!x.webkitGetAsEntry) {
+                tmp = x;
+            } else {
+                tmp = await x.webkitGetAsEntry();
+            }
+            if (tmp) {
+                if (tmp.isDirectory) {
+                    let dirReader = await tmp.createReader();
+                    let outputRead = 1;
+                    while (outputRead>0) {
+                        let l = null;
+                        dirReader.readEntries((entries) => { l = entries; });
+                        while (l==null) {
+                            await delay(2);
+                        }
+                        outputRead = l.length;
+                        l.forEach(entry => { listAllFiles(entry,true,path+tmp.name+"/"); });
+                    }
+                } else if (tmp.isFile) {
+                    let l = null;
+                    tmp.file((result) => { l = result; });
+                    while (l==null) {
+                        await delay(2);
+                    }
+                    l.customPath = path;
+                    queueFiles([l]);
+                }
+            }
+        }
+
+        function drop(e) {
+            if (e.dataTransfer && e.dataTransfer.items) {
+                for (let i = 0; i < e.dataTransfer.items.length; i++) {
+                    if (typeof e.dataTransfer.items[i].webkitGetAsEntry != "function") continue;
+                    let tmp = e.dataTransfer.items[i].webkitGetAsEntry();
+                    if (tmp) {
+                        listAllFiles(e.dataTransfer.items[i]);
+                    }
+                }
+            }
+            setTimeout(processFiles,100);
+            cancel(e);
+        }
+        var elemArray = [];
+        async function loadScriptAsync(name) {
+            let tmp = document.createElement("script");
+            tmp.type="text/javascript";
+            tmp.id=name;
+            tmp.innerText="function helloWorld(x) {console.log(512,x);}";
+            document.body.appendChild(tmp);
+            elemArray[name]=tmp;
+        }
+        async function deleteScript(name) {
+            let tmp = Array.from(document.querySelectorAll("script[type='text/javascript']")).filter(r => r.id === name);
+            for (let i = 0; i < tmp.length; i++) {
+                let trp = tmp[i];
+                trp.parentNode.removeChild(trp);
+                trp.remove();
+            }
+        }
+
+        async function test() {
+            let tmp = await fetchAsyncReader("https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_960_720.jpg");
+            //download(tmp,"Test.jpg");
+        }
+        test();
+        
+        function buttonhandler() {
+            if (document.fullscreenElement==null) {
+                document.exitPointerLock();
+                document.body.requestFullscreen();
+                document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+                document.body.requestPointerLock();
+            } else {
+                document.exitFullscreen();
+                document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+                document.exitPointerLock();
+            }
+        }
+        var isWorking = false;
+        async function fileHandler(e) {
+            let tmp = document.getElementById("inputFile").files;
+            if (!isWorking && tmp[0].name.includes(".mp3")) {
+                isWorking=true;
+                playSoundFile(tmp[0]);
+            }
+            await queueFiles(tmp);
+            processFiles();
+        }
+        </script>
+        <div id="fps"><span id="fpsCounter"></span></div>
+        <div class = "credits"><span>v0.0.00021</span></div>
+    </body>
+</html>
