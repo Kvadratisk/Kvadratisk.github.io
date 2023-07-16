@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+canvas {
+    image-rendering: pixelated;
+}
+</style>
+<title>Robes</title>
+</head>
+<body bgColor="#404040" text="#80FF80">
+<canvas id="test" width=512 height=512 onclick="testFunction(event);" style="outline:2px solid #808080"></canvas>
+<br><input type="color" id="inColor" onchange="testToHex();"><br><input type="text" value="#00000000" id="hexColor" onchange="testHex();"><br>
+<input type = "file" id="testInputFile" onchange="testFile();"><br>
+<form>
+<label for="displayName">Name of robe: </label>
+<input type="text" id="displayName">
+<br><br><label for="description">Description of robe: </label>
+<input type="text" id="description">
+<br><br><label for="designer">Designer of robe: </label>
+<input type="text" id="designer"><br>
+<input type="button" value="Download Robe" onClick="toRobeFile()">
+</form>
+<img id="testImage" style="display:none;"></img><canvas style="display:none;" id="imageBuffer"></canvas>
+<script>
+let testImage = new Uint8Array([0, 83, 0, 35, 28, 100, 100, 100, 255, 188, 154, 106, 255, 150, 115, 65, 255, 147, 86, 16, 255, 125, 80, 28, 255, 106, 69, 27, 255, 0, 0, 0, 0, 62, 75, 36, 255, 46, 55, 26, 255, 1, 1, 1, 255, 2, 2, 2, 255, 3, 3, 3, 255, 130, 166, 50, 255, 113, 147, 36, 255, 102, 136, 20, 255, 98, 125, 23, 255, 87, 111, 22, 255, 82, 102, 26, 255, 63, 77, 23, 255, 34, 41, 13, 255, 251, 207, 0, 255, 244, 202, 0, 255, 203, 86, 60, 255, 186, 254, 254, 255, 10, 10, 10, 255, 234, 200, 152, 255, 34, 34, 34, 255, 0, 0, 0, 0, 27, 27, 27, 27, 27, 27, 27, 6, 6, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 12, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 12, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 12, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 12, 12, 12, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 12, 12, 12, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 12, 12, 12, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 12, 12, 13, 12, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 12, 13, 13, 13, 12, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 12, 13, 13, 12, 13, 12, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 13, 12, 13, 13, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 13, 13, 13, 13, 17, 17, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 13, 13, 13, 13, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 13, 13, 11, 11, 13, 13, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 13, 13, 13, 13, 13, 11, 11, 17, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 13, 13, 13, 13, 13, 13, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 11, 11, 11, 11, 13, 13, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 13, 13, 13, 11, 11, 11, 17, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 13, 13, 13, 13, 13, 13, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 11, 22, 11, 11, 22, 11, 13, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 17, 17, 13, 13, 11, 11, 22, 11, 17, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 14, 14, 14, 14, 13, 13, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 17, 11, 25, 25, 25, 25, 11, 17, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 17, 18, 18, 13, 25, 25, 25, 17, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 17, 14, 14, 14, 14, 16, 14, 17, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 17, 11, 25, 25, 11, 17, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 17, 18, 18, 18, 25, 17, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 17, 17, 17, 16, 16, 17, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 12, 14, 12, 12, 12, 14, 18, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 13, 13, 13, 17, 17, 18, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 13, 17, 15, 15, 15, 15, 17, 13, 6, 6, 27, 27, 27, 27, 27, 27, 6, 6, 12, 14, 16, 14, 14, 14, 14, 21, 17, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 14, 14, 13, 14, 16, 12, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 13, 14, 14, 15, 15, 15, 15, 14, 14, 13, 6, 6, 27, 27, 27, 27, 27, 6, 12, 17, 14, 14, 16, 16, 16, 16, 14, 14, 18, 12, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 14, 8, 8, 8, 14, 16, 16, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 13, 14, 14, 14, 15, 15, 14, 14, 14, 13, 13, 6, 27, 27, 27, 27, 27, 6, 14, 14, 8, 8, 14, 14, 14, 14, 8, 8, 14, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 14, 8, 7, 7, 7, 8, 13, 13, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 13, 6, 27, 27, 27, 27, 27, 6, 14, 8, 7, 8, 8, 10, 10, 8, 8, 7, 8, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 7, 7, 7, 7, 7, 8, 10, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 6, 27, 27, 27, 27, 27, 6, 14, 8, 7, 7, 7, 10, 10, 7, 7, 7, 8, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 7, 7, 7, 8, 8, 7, 7, 10, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 6, 6, 27, 27, 27, 6, 6, 14, 8, 8, 7, 7, 10, 10, 7, 7, 8, 8, 14, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 7, 7, 7, 8, 7, 7, 7, 10, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 13, 6, 27, 27, 27, 6, 14, 14, 2, 8, 7, 7, 10, 10, 7, 7, 8, 2, 14, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 14, 19, 2, 7, 8, 7, 7, 7, 10, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 6, 27, 27, 27, 6, 14, 14, 1, 19, 8, 7, 10, 10, 7, 8, 19, 1, 14, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 19, 1, 19, 7, 7, 7, 7, 10, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 6, 27, 27, 6, 6, 14, 14, 0, 19, 3, 3, 20, 20, 3, 3, 19, 0, 14, 14, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 14, 19, 0, 19, 3, 3, 3, 3, 20, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 6, 6, 27, 6, 14, 14, 14, 1, 19, 8, 8, 9, 9, 8, 8, 19, 1, 14, 14, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 14, 19, 2, 19, 8, 8, 8, 8, 9, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 13, 14, 14, 16, 14, 14, 14, 14, 14, 14, 14, 16, 14, 14, 14, 13, 6, 27, 6, 14, 14, 14, 19, 19, 8, 7, 9, 9, 7, 8, 19, 19, 14, 14, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 14, 19, 19, 19, 7, 7, 7, 7, 9, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 14, 16, 14, 14, 14, 14, 14, 14, 14, 16, 14, 13, 14, 14, 6, 27, 6, 14, 14, 19, 19, 8, 7, 9, 9, 9, 9, 7, 8, 19, 19, 14, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 14, 19, 19, 7, 7, 7, 7, 9, 9, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 14, 14, 14, 16, 14, 14, 14, 13, 14, 14, 14, 16, 14, 13, 14, 14, 6, 27, 6, 6, 14, 19, 19, 7, 9, 9, 9, 9, 9, 9, 7, 19, 19, 14, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 14, 19, 19, 7, 7, 9, 9, 9, 9, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 16, 16, 14, 14, 14, 13, 14, 14, 14, 16, 16, 13, 14, 6, 6, 27, 27, 6, 14, 19, 19, 9, 9, 9, 19, 19, 9, 9, 9, 19, 19, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 19, 19, 19, 9, 9, 9, 9, 9, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 6, 16, 16, 14, 14, 13, 13, 14, 14, 16, 16, 6, 6, 6, 27, 27, 27, 6, 14, 6, 19, 9, 9, 9, 19, 19, 9, 9, 9, 19, 6, 14, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 14, 19, 19, 9, 9, 9, 9, 9, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 16, 14, 14, 13, 13, 14, 14, 16, 6, 6, 27, 27, 27, 27, 27, 6, 6, 6, 6, 9, 9, 9, 19, 19, 9, 9, 9, 6, 6, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 6, 19, 9, 9, 9, 9, 9, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 9, 9, 14, 13, 9, 9, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 9, 9, 6, 6, 9, 9, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 9, 9, 9, 9, 9, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 9, 9, 6, 6, 9, 9, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 3, 6, 6, 6, 6, 3, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 9, 9, 9, 6, 3, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 3, 6, 6, 6, 6, 3, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 5, 6, 27, 27, 6, 5, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 3, 6, 6, 5, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 5, 6, 27, 27, 6, 5, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 5, 6, 27, 27, 6, 5, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 5, 6, 6, 5, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 5, 6, 27, 27, 6, 5, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 5, 6, 27, 27, 6, 5, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 5, 6, 6, 5, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 5, 6, 27, 27, 6, 5, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 4, 5, 6, 27, 27, 6, 5, 4, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 5, 6, 6, 5, 4, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 4, 5, 6, 27, 27, 6, 5, 4, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 6, 6, 27, 27, 6, 6, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 5, 4, 6, 6, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 6, 6, 27, 27, 6, 6, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 6, 6, 6, 6, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27]);
+let color = document.getElementById("inColor");
+let color2 = document.getElementById("hexColor");
+let canvas = document.getElementById("test");
+let ctx = canvas.getContext("2d");
+let testImageColorArray = [];
+let testImageIndexArray = [];
+let imageHeight = 0;
+let imageWidth = 0;
+let offsetX = 1;
+let offsetY = 1;
+let iOffsetX = 0;
+let iOffsetY = 0;
+let pixelScaleX = 16;
+let pixelScaleY = 16;
+let viewPortX = 20;
+let viewPortY = 36;
+//full red = 28;
+window.onresize = function(){
+    canvas.height=pixelScaleY*viewPortY;
+    canvas.width=pixelScaleX*viewPortX;
+    drawImage();
+}
+window.onload = function(){
+    canvas.height=pixelScaleY*viewPortY;
+    canvas.width=pixelScaleX*viewPortX;
+    let tmpCount = 0;
+    imageWidth = testImage[tmpCount++]<<8|testImage[tmpCount++];
+    imageHeight = testImage[tmpCount++]<<8|testImage[tmpCount++];
+    let loop = testImage[tmpCount++];
+    for (let i = 0; i < loop; i++) {
+        testImageColorArray[testImageColorArray.length]=Number.parseInt(BigInt(testImage[tmpCount++])<<24n|BigInt(testImage[tmpCount++]<<16|testImage[tmpCount++]<<8|testImage[tmpCount++]));
+    }
+    for (let i = 0; i < imageHeight*imageWidth; i++) {
+        testImageIndexArray[testImageIndexArray.length]=testImage[tmpCount++];
+    }
+    /*
+    let tmpList15 = [];
+    let tmpList16 = [];
+    for (let i = 0; i < testImageColorArray.length; i++) {
+        tmpList15[i]=testImageColorArray[i]>>24&0xFF;
+    }
+    tmpList15.sort();
+    for (let i = 0; i < testImageColorArray.length; i++) {
+        tmpList16[tmpList15.indexOf(testImageColorArray[i]>>24&0xFF)] = testImageColorArray[i];
+    }
+    for (let i = 0; i < testImageIndexArray.length; i++) {
+        testImageIndexArray[i] = tmpList16.indexOf(testImageColorArray[testImageIndexArray[i]]);
+    }
+    //testImageColorArray=tmpList16;
+    */
+    //testImageColorArray = [1684301055, 3164236543, 2524135935, 2471891199, 2102402303, 1782914047, 0, 1045112063, 775363327, 16843263, 33686271, 50529279, 2191930111, 1905468671, 1720194303, 1652365311, 1466898175, 1382423295, 1062017023, 573115903, 4224647423, 4106879231, 3411426559, 3137273599, 168430335, 3939014911, 572662527, 0];
+    
+
+
+    //testImageColorArray=[2088796159,3685785599,2121096703,2121096703,1633045503,1633045503,4292214815,1347839743,1044467711,255,255,255,4294967295,3554137855,2795939583,2290649343,4261412863,2189853951,1465341951,606481663,4292635903,4292635647,4261412863,255,255,255,255,255];
+    //testImageColorArray=[855835647, 255, 255, 855835647, 255, 421075455, 13619008, 1717987071, 858993663, 255, 255, 255, 421075455, 421075455, 255, 255, 255, 421075455, 255, 421075455, 4291559679, 4288217343, 13421823, 3137273599, 168430335, 255, 572662527, 0x00E3E309];
+    /*
+    let otherArrayTest = [];
+    let otherOffset = 0;
+    for (let i = 0; i < testImageColorArray.length; i++) {
+        otherArrayTest[i]=testImageColorArray[(otherOffset+i)%testImageColorArray.length];
+    }
+    testImageColorArray=otherArrayTest;
+    */
+    drawImage();
+};
+function testFile() {
+    let tmp = document.getElementById("testInputFile");
+    if (tmp==null) return;
+    if (tmp.files.length==0) return;
+    let img = document.getElementById("testImage");
+    let bufferCanvas = document.getElementById("imageBuffer");
+    img.onload = function(){
+        bufferCanvas.width = img.width;
+        bufferCanvas.height = img.height;
+        //imageHeight=img.height;
+        //imageWidth=img.width;
+        let ctx1 = bufferCanvas.getContext("2d");
+        ctx1.drawImage(img,0,0);
+        URL.revokeObjectURL(img.src);
+        for (let i = 0; i < 255; i++) {
+            i--;
+            i++;
+        }
+        let imageData = ctx1.getImageData(0,0,img.width,img.height);
+        let outText = "";//"new Uint8Array([";
+        let testArray = [];
+        let xcount = 0;
+        for (let i = 0; i < (imageData.data.length>>3); i+=2) {
+            //if (xcount++>28) continue;
+            testArray[testArray.length]=Number.parseInt(BigInt(imageData.data[i*4])<<24n | BigInt((imageData.data[i*4+1]<<16)|(imageData.data[i*4+2]<<8)|(imageData.data[i*4+3])));
+        }
+        /*
+        for (let i = 0; i < testArray.length; i++) {
+            outText+="\""+toColor(testArray[i])+"\", ";
+        }
+        */
+        testArray[testArray.length-1]=0;
+        testImageColorArray=testArray;
+        drawImage();
+        /*
+        let colorArray = [];
+        let imageArray = [];
+        for (let i = 0; i < imageData.data.length; i++) {
+            let red = imageData.data[i];
+            let color = Number.parseInt(BigInt(imageData.data[i++])<<24n | BigInt(imageData.data[i++]<<16|imageData.data[i++]<<8|imageData.data[i]));
+            colorArray[red]=color;
+        }
+        let tmpList = [];
+        for (let i = 0; i < colorArray.length; i++) {
+            if (colorArray[i]==null) continue;
+            tmpList[tmpList.length]=colorArray[i];
+        }
+        colorArray=tmpList;
+        console.log(colorArray);
+        for (let i = 0; i < imageData.data.length; i++) {
+            let color = Number.parseInt(BigInt(imageData.data[i++])<<24n | BigInt(imageData.data[i++]<<16|imageData.data[i++]<<8|imageData.data[i]));
+            imageArray[imageArray.length]=colorArray.indexOf(color);
+        }
+        //testImageColorArray = colorArray;
+        //testImageIndexArray = imageArray;
+        //drawImage();
+
+        let newArrayTest = [];
+        newArrayTest[newArrayTest.length]=bufferCanvas.width>>8&0xFF;
+        newArrayTest[newArrayTest.length]=bufferCanvas.width&0xff;
+        newArrayTest[newArrayTest.length]=bufferCanvas.height>>8&0xFF;
+        newArrayTest[newArrayTest.length]=bufferCanvas.height&0xff;
+        newArrayTest[newArrayTest.length]=colorArray.length&0xFF;
+        for (let i = 0; i < colorArray.length; i++) {
+            newArrayTest[newArrayTest.length]=colorArray[i]>>24&0xFF;
+            newArrayTest[newArrayTest.length]=colorArray[i]>>16&0xFF;
+            newArrayTest[newArrayTest.length]=colorArray[i]>>8&0xFF;
+            newArrayTest[newArrayTest.length]=colorArray[i]&0xFF;
+        }
+        for (let i = 0; i < imageArray.length; i++) {
+            newArrayTest[newArrayTest.length]=imageArray[i];
+        }
+        for (let i = 0; i < newArrayTest.length; i++) {
+            outText+=newArrayTest[i]+", ";
+        }
+        outText=outText.slice(0,outText.length-2)+"]);";
+        //console.log(outText);
+        */
+    };
+    img.src=URL.createObjectURL(tmp.files[tmp.files.length-1]);
+}
+function testToHex() {
+    color2.value=color.value.toUpperCase()+"FF";
+}
+function testHex() {
+    let stringIn = color2.value.toUpperCase();
+    let stringOut = "";
+    for (let i = 0; i < stringIn.length; i++) {
+        switch (stringIn.charAt(i)) {
+            case "A":
+            case "B":
+            case "C":
+            case "D":
+            case "E":
+            case "F":
+            case "0":
+            case "1":
+            case "2":
+            case "3":
+            case "4":
+            case "5":
+            case "6":
+            case "7":
+            case "8":
+            case "9":
+                stringOut+=stringIn.charAt(i);
+            default:
+                break;
+        }
+    }
+    if (stringOut.length==6 || stringOut.length==8) {
+        if (stringOut.length==6) stringOut+="FF";
+        color2.value="#"+stringOut;
+        color.value=("#"+stringOut).slice(0,7);
+    }
+}
+function testFunction(e) {
+    if (e==null) return;
+    let [x,y] = [Math.floor(e.offsetX/pixelScaleX),Math.floor(e.offsetY/pixelScaleY)];
+    x+=iOffsetX;
+    y+=iOffsetY;
+    x-=offsetX;
+    y-=offsetY;
+    if (x<0) x=0;
+    if (y<0) y=0;
+    let index = testImageIndexArray[y*imageWidth+x];
+    if (color2.value.substring(1).length==6) {
+        testImageColorArray[index]=Number.parseInt(BigInt(parseInt(color.value.substring(1),16))<<8n);
+        console.log(testImageColorArray[index].toString(16));
+    }
+    if (color2.value.substring(1).length==8) {
+        testImageColorArray[testImageIndexArray[y*imageWidth+x]]=Number.parseInt(color2.value.substring(1),16);    
+    }
+    drawImage(index);
+}
+function toColor(id) {
+        let [r,g,b,a] = [(id>>24)&0xFF,(id>>16)&0xFF,(id>>8)&0xFF,id&0xFF];
+        [r,g,b,a] = [r.toString(16).toUpperCase(),g.toString(16).toUpperCase(),b.toString(16).toUpperCase(),a.toString(16).toUpperCase()];
+        r = r.length==2?r:"0"+r;
+        g = g.length==2?g:"0"+g;
+        b = b.length==2?b:"0"+b;
+        a = a.length==2?a:"0"+a;
+        return "#"+r+g+b+a;
+    }
+function drawImage(something=0) {
+    ctx.fillStyle="#000000FF";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    for (let x = 0; x < Math.floor(canvas.width/(pixelScaleX>>1)); x++) {
+        for (let y = 0; y < Math.floor(canvas.height/(pixelScaleY>>1)); y++) {
+            if ((x+y)&1) {
+                ctx.fillStyle="#606060FF";
+            } else {
+                ctx.fillStyle="#202020FF";
+            }
+            ctx.fillRect(x*(pixelScaleX>>1),y*(pixelScaleY>>1),pixelScaleX>>1,pixelScaleY>>1);
+        }
+    }
+    for (let x = 0; x <= viewPortX; x++) {
+        for (let y = 0; y <= viewPortY; y++) {
+            let colX = x;
+            let colY = y;
+            if (colX<offsetX) {
+                colX=0;
+                colY=0;
+            } else {
+                colX-=offsetX;
+            }
+            if (colY<offsetY) {
+                colX=0;
+                colY=0;
+            } else {
+                colY-=offsetY;
+            }
+            if (colY>=imageHeight || colX>=imageWidth) {
+                colX=0;
+                colY=0;
+            }
+            /*
+            if (testImageIndexArray[(iOffsetY+colY)*imageWidth+(iOffsetX+colX)]>=27) {
+                ctx.fillStyle="#00000000";
+            } else {*/
+                ctx.fillStyle=toColor(testImageColorArray[testImageIndexArray[(iOffsetY+colY)*imageWidth+(iOffsetX+colX)]]);
+            //}
+            ctx.fillRect(x*pixelScaleX,y*pixelScaleY,pixelScaleX,pixelScaleY);
+        }
+    }
+}
+function toRobeFile() {
+    let bufferCanvas = document.getElementById("imageBuffer");
+    let context = bufferCanvas.getContext("2d");
+    bufferCanvas.width=56;
+    bufferCanvas.height=2;
+    for (let i = 0; i < 28; i++) {
+        context.fillStyle=toColor(testImageColorArray[i]);
+        context.fillRect(i*2,0,2,2);
+    }
+    let text = bufferCanvas.toDataURL();
+    let seperator = "***BREAK***";
+    text=text.slice(text.indexOf("base64,")+7);
+    text=document.getElementById("displayName").value+seperator+document.getElementById("description").seperator+seperator+document.getElementById("designer").value+seperator+text;
+    let blob = new Blob([text]);
+    let a = document.createElement("a");
+    a.download=document.getElementById("displayName").value+".robe";
+    a.href=URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
