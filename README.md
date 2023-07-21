@@ -7,6 +7,6 @@
     - [ ] Better Color Selector
     - [ ] Better Styling
   - [ ] Image Editor \
-File Readers:
+File Readers: \
     - [ ] Portable Network Graphics reader
     - [ ] Graphics Interchange Format reader
