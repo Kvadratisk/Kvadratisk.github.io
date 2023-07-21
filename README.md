@@ -6,7 +6,9 @@
     - [x] Live Robe Image Editor
     - [ ] Better Color Selector
     - [ ] Better Styling
-  - [ ] Image Editor \
+  - [ ] Image Editor
+    - [ ] Color Selector
+    - [ ] Tools
 File Readers: \
     - [ ] Portable Network Graphics reader
     - [ ] Graphics Interchange Format reader
