@@ -9,6 +9,7 @@
   - [ ] Image Editor
     - [ ] Color Selector
     - [ ] Tools \
+
 File Readers: \
     - [ ] Portable Network Graphics reader
     - [ ] Graphics Interchange Format reader
