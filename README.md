@@ -1,7 +1,7 @@
 # Kvadratisk.github.io
 
 To do list: \
-  Editors: \
+  Editors: 
   - [ ] Wizard Of Legend robe editor compatible with Tournament Edition \
     - [x] Live Robe Image Editor \
     - [ ] Better Color Selector \
