@@ -11,5 +11,5 @@ Editors:
     - [ ] Tools \
 
 File Readers: \
-    - [ ] Portable Network Graphics reader
-    - [ ] Graphics Interchange Format reader
+  - [ ] Portable Network Graphics reader
+  - [ ] Graphics Interchange Format reader
