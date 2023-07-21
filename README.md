@@ -8,8 +8,8 @@ Editors:
     - [ ] Better Styling
   - [ ] Image Editor
     - [ ] Color Selector
-    - [ ] Tools \
+    - [ ] Tools
 
-File Readers: \
+File Readers:
   - [ ] Portable Network Graphics reader
   - [ ] Graphics Interchange Format reader
