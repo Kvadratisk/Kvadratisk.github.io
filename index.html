@@ -218,11 +218,13 @@ function testFunction(e) {
     y-=offsetY;
     if (x<0) x=0;
     if (y<0) y=0;
+    let save = x;
     for (let i = 0; i < x; i++) {
         if (skipArray.includes(i)) {
             x+=skipIndex[skipArray.indexOf(i)];
         }
     }
+    console.log("Original: "+x+"\nCustom: "+(x-save));
     let index = testImageIndexArray[y*imageWidth+x];
     if (color2.value.substring(1).length==6) {
         testImageColorArray[index]=Number.parseInt(BigInt(parseInt(color.value.substring(1),16))<<8n);
