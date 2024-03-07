@@ -43,12 +43,44 @@ let pixelScaleY = 16;
 let viewPortX = 84;
 let viewPortY = 36;
 //full red = 28;
+    
+function checkScale() {
+    while (pixelScaleX*(viewPortX-skipCount)<window.innerWidth) {
+        pixelScaleX++;
+        if (pixelScaleX>=16) break;
+    }
+    while (pixelScaleY*(viewPortY-skipCount)<window.innerHeight) {
+        pixelScaleY++;
+        if (pixelScaleY>=16) break;
+    }
+    while (pixelScaleX*(viewPortX-skipCount)>window.innerWidth) {
+        pixelScaleX--;
+        if (pixelScaleX==0) 
+        {
+            pixelScaleX=1;
+            break;
+        }
+    }
+    while (pixelScaleY*viewPortY>window.innerHeight) {
+        pixelScaleY--;
+        if (pixelScaleY==0) 
+        {
+            pixelScaleY=1;
+            break;
+        }
+    }
+    pixelScaleX=Math.min(pixelScaleX,pixelScaleY);
+    if (pixelScaleX>1) pixelScaleX=pixelScaleX&0xFE;
+    pixelScaleY=pixelScaleX;
+}
 window.onresize = function(){
+    checkScale();
     canvas.height=pixelScaleY*viewPortY;
     canvas.width=pixelScaleX*(viewPortX-skipCount);
     drawImage();
 }
 window.onload = function(){
+    checkScale();
     canvas.height=pixelScaleY*viewPortY;
     canvas.width=pixelScaleX*(viewPortX-skipCount);
     let tmpCount = 0;
