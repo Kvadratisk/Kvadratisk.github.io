@@ -253,7 +253,7 @@ function drawImage(something=0) {
     let negX = 0;
     for (let x = 0; x <= viewPortX; x++) {
         if (skipArray.indexOf(x)!=-1) {
-            negX+=skipIndex[skipArray.indexOf(x)];
+            negX=skipIndex[skipArray.indexOf(x)];
         }
         for (let y = 0; y <= viewPortY; y++) {
             let colX = x+negX;
