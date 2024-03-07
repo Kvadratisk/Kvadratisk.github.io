@@ -29,6 +29,9 @@ let canvas = document.getElementById("test");
 let ctx = canvas.getContext("2d");
 let testImageColorArray = [];
 let testImageIndexArray = [];
+let skipArray = [];
+let skipIndex = [];
+let skipCount = 0;
 let imageHeight = 0;
 let imageWidth = 0;
 let offsetX = 1;
@@ -37,7 +40,7 @@ let iOffsetX = 0;
 let iOffsetY = 0;
 let pixelScaleX = 16;
 let pixelScaleY = 16;
-let viewPortX = 20;
+let viewPortX = 84;
 let viewPortY = 36;
 //full red = 28;
 window.onresize = function(){
@@ -47,7 +50,7 @@ window.onresize = function(){
 }
 window.onload = function(){
     canvas.height=pixelScaleY*viewPortY;
-    canvas.width=pixelScaleX*viewPortX;
+    canvas.width=pixelScaleX*(viewPortX-skipCount);
     let tmpCount = 0;
     imageWidth = testImage[tmpCount++]<<8|testImage[tmpCount++];
     imageHeight = testImage[tmpCount++]<<8|testImage[tmpCount++];
@@ -247,7 +250,12 @@ function drawImage(something=0) {
             ctx.fillRect(x*(pixelScaleX>>1),y*(pixelScaleY>>1),pixelScaleX>>1,pixelScaleY>>1);
         }
     }
+    let negX = 0;
     for (let x = 0; x <= viewPortX; x++) {
+        if (skipArray.indexOf(x)!=-1) {
+            negX=skipIndex[skipArray.indexOf(x)];
+            x+=skipIndex[skipArray.indexOf(x)];
+        }
         for (let y = 0; y <= viewPortY; y++) {
             let colX = x;
             let colY = y;
@@ -273,7 +281,7 @@ function drawImage(something=0) {
             } else {*/
                 ctx.fillStyle=toColor(testImageColorArray[testImageIndexArray[(iOffsetY+colY)*imageWidth+(iOffsetX+colX)]]);
             //}
-            ctx.fillRect(x*pixelScaleX,y*pixelScaleY,pixelScaleX,pixelScaleY);
+            ctx.fillRect((x-negX)*pixelScaleX,y*pixelScaleY,pixelScaleX,pixelScaleY);
         }
     }
 }
