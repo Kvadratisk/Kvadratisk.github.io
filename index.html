@@ -45,7 +45,7 @@ let viewPortY = 36;
 //full red = 28;
 window.onresize = function(){
     canvas.height=pixelScaleY*viewPortY;
-    canvas.width=pixelScaleX*viewPortX;
+    canvas.width=pixelScaleX*(viewPortX-skipCount);
     drawImage();
 }
 window.onload = function(){
