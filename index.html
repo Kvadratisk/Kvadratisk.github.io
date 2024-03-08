@@ -24,7 +24,7 @@ canvas {
 <canvas id="test" width=512 height=512 onclick="testFunction(event);" style="outline:2px solid #808080"></canvas>
 <br><input type="color" id="inColor" onchange="testToHex();"><br><input type="text" value="#00000000" id="hexColor" onchange="testHex();"><br>
 <input type = "file" id="testInputFile" onchange="testFile();" style="display:none">
-<input type="range" min="0" max="255" step="1" value="255" id="colorSlider" onchange="alphaUpdate()"><br><br>
+<input type="range" min="0" max="255" step="1" value="0" id="colorSlider" onchange="alphaUpdate()"><br><br>
 <input type="button" value="Replace color" onclick="textChange()" id="scratch"><br><br>
 <div id = "colorDiv"><div class="colorField" onclick="colorPick(0)"></div><div class="colorField" onclick="colorPick(1)"></div><div class="colorField" onclick="colorPick(2)"></div><div class="colorField" onclick="colorPick(3)"></div><div class="colorField" onclick="colorPick(4)"></div><div class="colorField" onclick="colorPick(5)"></div><div class="colorField" onclick="colorPick(6)"></div><div class="colorField" onclick="colorPick(7)"></div></div><br>
 <form>
@@ -258,6 +258,7 @@ function testFile() {
 }
 function testToHex() {
     color2.value=color.value.toUpperCase()+"FF";
+    document.getElementById("colorSlider").value="255";
 }
 function testHex() {
     let stringIn = color2.value.toUpperCase();
