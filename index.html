@@ -62,6 +62,7 @@ function colorPick(id) {
         curColor = colorPickZone[id];
         color.value=curColor.slice(0,7);
         color2.value=curColor;
+        document.getElementById("colorSlider").value=parseInt(curColor.slice(7),16);
         colorFields[id].style.outline="2px solid #A0FFA0";
         return;
     }
@@ -289,6 +290,7 @@ function testHex() {
         color2.value="#"+stringOut;
         color.value=("#"+stringOut).slice(0,7);
     }
+    document.getElementById("colorSlider").value=parseInt(stringOut.slice(6),16);
 }
 function testFunction(e) {
     if (e==null) return;
