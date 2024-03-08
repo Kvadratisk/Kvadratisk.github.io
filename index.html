@@ -47,6 +47,9 @@ function textChange() {
         colorPickMode=true;
     } else {
         document.getElementById("scratch").value="Replace color";
+        for (let i = 0; i < colorFields.length; i++) {
+            colorFields[i].style.outline="2px solid black";
+        }
         colorPickMode=false;
     }
 }
