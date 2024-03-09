@@ -15,18 +15,19 @@ canvas {
     gap:20px;
 }
 #colorSlider {
-    width:512px;
+    width:min(512px,90vmin);
 }
 </style>
 <title>Robes</title>
 </head>
-<body bgColor="#404040" text="#80FF80">
-<canvas id="test" width=512 height=512 onclick="testFunction(event);" style="outline:2px solid #808080"></canvas>
+<body bgColor="#404040" text="#80FF80" onmousemove="updateEyeTool(event)">
+<canvas id="test" width=512 height=512 onclick="testFunction(event);" style="outline:2px solid #808080"></canvas><br>
+<input type="button" value="undo" onclick="undo()"><input type="button" value="redo" onclick="redo()" style="position:relative;left:20vmin;"><input type="button" value="Eyedrop tool" onclick="activateEyeDrop();" style="position:relative;left:40vmin;">
 <br><input type="color" id="inColor" onchange="testToHex();"><br><input type="text" value="#00000000" id="hexColor" onchange="testHex();"><br>
-<input type = "file" id="testInputFile" onchange="testFile();" style="display:none">
 <label for="colorSlider">Alpha: <input type="range" min="0" max="255" step="1" value="0" id="colorSlider" onchange="alphaUpdate()"></label><br><br>
 <input type="button" value="Currently in replace color mode" onclick="btnChange()" id="scratch"><br><br>
 <div id = "colorDiv"><div class="colorField" onclick="colorPick(0)"></div><div class="colorField" onclick="colorPick(1)"></div><div class="colorField" onclick="colorPick(2)"></div><div class="colorField" onclick="colorPick(3)"></div><div class="colorField" onclick="colorPick(4)"></div><div class="colorField" onclick="colorPick(5)"></div><div class="colorField" onclick="colorPick(6)"></div><div class="colorField" onclick="colorPick(7)"></div></div><br>
+<label for="testInputFile">Import color strip: <input type = "file" id="testInputFile" onchange="testFile();"></label><input type="button" value="Save color strip" onclick="savestrip()"><br><br>
 <form>
 <label for="displayName">Name of robe: </label>
 <input type="text" id="displayName">
@@ -37,18 +38,91 @@ canvas {
 <input type="button" value="Download Robe" onClick="toRobeFile()">
 </form>
 <img id="testImage" style="display:none;"></img><canvas style="display:none;" id="imageBuffer"></canvas>
+<canvas id="eyeDrop" style="display:none;" onclick="eyeTrigger(event);"></canvas>
 <script>
 var eventBuffer = [];
 var currentID = -1;
+var eyeDropActive = false;
+var eyeDropVision = document.getElementById("eyeDrop");
+var eyeDropContext = eyeDropVision.getContext("2d");
+function updateEyeTool(event) {
+    if (eyeDropActive==false) return;
+    let [x,y]=[(event.pageX-28),(event.pageY-28)];
+    eyeDropVision.style.left=x+"px";
+    eyeDropVision.style.top=y+"px";
+    let bounds = canvas.getBoundingClientRect();
+    let [cx,cy]=[x-bounds.x,y-bounds.y];
+    if (cx<0 || cx+28>bounds.width || cy<0 || cy+28>bounds.height) {
+        eyeDropContext.fillStyle="#000000";
+        eyeDropContext.fillRect(0,0,eyeDropVision.width,eyeDropVision.height);
+        return;
+    }
+    let imgdat1 = ctx.getImageData(cx+28,cy+28,3,3);
+    let scale = 10;
+    for (let y1 = 0; y1 < imgdat1.height; y1++) {
+        for (let x1 = 0; x1 < imgdat1.width; x1++) {
+            let color = Number.parseInt((BigInt(imgdat1.data[(y1*imgdat1.width+x1)*4])<<24n)+BigInt(imgdat1.data[(y1*imgdat1.width+x1)*4+1]<<16|imgdat1.data[(y1*imgdat1.width+x1)*4+2]<<8|imgdat1.data[(y1*imgdat1.width+x1)*4+3]));
+            eyeDropContext.fillStyle=toColor(color);
+            eyeDropContext.fillRect(x1*scale,y1*scale,scale,scale);
+        }
+    }
+    eyeDropContext.fillStyle="#000000";
+    eyeDropContext.fillRect(0,0,30,2);
+    eyeDropContext.fillRect(0,28,30,2);
+    eyeDropContext.fillRect(0,0,2,30);
+    eyeDropContext.fillRect(28,0,2,30);
+}
+function eyeTrigger(event) {
+    eyeDropActive=false;
+    eyeDropVision.style.left="8000px";
+    eyeDropVision.style.top="0px";
+    eyeDropVision.style.display="none";
+    let bounds = canvas.getBoundingClientRect();
+    let [cx,cy]=[event.pageX-bounds.x-28,event.pageY-bounds.y-28];
+    if (cx<0 || cx+28>bounds.width || cy<0 || cy+28>bounds.height) {
+        return;
+    }
+    let imgdat1 = ctx.getImageData(cx+29,cy+29,1,1);
+    let tmpCol = toColor(Number.parseInt((BigInt(imgdat1.data[0])<<24n)+BigInt(imgdat1.data[1]<<16|imgdat1.data[2]<<8|imgdat1.data[3])));
+    color.value=tmpCol.slice(0,7);
+    color2.value=tmpCol;
+    document.getElementById("colorSlider").value=parseInt(tmpCol.slice(7),16);
+}
+function activateEyeDrop() {
+    eyeDropActive=true;
+    eyeDropVision.width=30;
+    eyeDropVision.height=30;
+    eyeDropVision.style.position="absolute";
+    eyeDropVision.style.left="8000px";
+    eyeDropVision.style.top="0px";
+    eyeDropVision.style.display="block";
+    eyeDropContext.fillStyle="#000000";
+    eyeDropContext.fillRect(0,0,eyeDropVision.width,eyeDropVision.height);
+}
+function registerEvent(id,oldC,newC) {
+    if (oldC==newC) return;
+    if (eventBuffer.length>1000) {
+        eventBuffer.shift();
+        currentID--;
+    }
+    if (currentID<eventBuffer.length-1) {
+        eventBuffer=eventBuffer.slice(0,Math.max(0,currentID));
+    }
+    eventBuffer.push([id,oldC,newC]);
+    currentID++;
+}
 function undo() {
     if (currentID==-1) return;
     let lastevent = eventBuffer[currentID];
-
+    testImageColorArray[lastevent[0]]=lastevent[1];
     currentID--;
     drawImage();
 }
 function redo() {
-    if (currentID>=eventBuffer.length) return;
+    if (currentID+1>=eventBuffer.length) return;
+    currentID++;
+    let lastevent = eventBuffer[currentID];
+    testImageColorArray[lastevent[0]]=lastevent[2];
     drawImage();
 }
 var colorPickMode = false;
@@ -102,7 +176,7 @@ function alphaUpdate() {
     color2.value=color2.value.slice(0,7)+val;
 }
 let canvas = document.getElementById("test");
-let ctx = canvas.getContext("2d");
+let ctx = canvas.getContext("2d",{"willReadFrequently":true});
 let testImageColorArray = [];
 let testImageIndexArray = [];
 let skipArray = [];
@@ -242,6 +316,7 @@ function testFile() {
     let img = document.getElementById("testImage");
     let bufferCanvas = document.getElementById("imageBuffer");
     img.onload = function(){
+        if (img.width!=56 || img.height!=2) return;
         bufferCanvas.width = img.width;
         bufferCanvas.height = img.height;
         //imageHeight=img.height;
@@ -254,6 +329,13 @@ function testFile() {
             i++;
         }
         let imageData = ctx1.getImageData(0,0,img.width,img.height);
+        for (let i = 0; i < 56; i++) {
+            let cur = Number.parseInt(BigInt(imageData.data[i*4])<<24n | BigInt((imageData.data[i*4+1]<<16)|(imageData.data[i*4+2]<<8)|(imageData.data[i*4+3])));
+            console.log(cur);
+            testImageColorArray[i>>1]=cur;
+            i++;
+        }
+        /*
         let outText = "";//"new Uint8Array([";
         let testArray = [];
         let xcount = 0;
@@ -266,8 +348,8 @@ function testFile() {
             outText+="\""+toColor(testArray[i])+"\", ";
         }
         */
-        testArray[testArray.length-1]=0;
-        testImageColorArray=testArray;
+        //testArray[testArray.length-1]=0;
+        //testImageColorArray=testArray;
         drawImage();
         /*
         let colorArray = [];
@@ -373,14 +455,15 @@ function testFunction(e) {
     }
     x+=save;
     let index = testImageIndexArray[y*imageWidth+x];
+    save = testImageColorArray[index];
     if (color2.value.substring(1).length==6) {
         testImageColorArray[index]=Number.parseInt(BigInt(parseInt(color.value.substring(1),16))<<8n);
-        console.log(testImageColorArray[index].toString(16));
     }
     if (color2.value.substring(1).length==8) {
-        testImageColorArray[testImageIndexArray[y*imageWidth+x]]=Number.parseInt(color2.value.substring(1),16);    
+        testImageColorArray[index]=Number.parseInt(color2.value.substring(1),16);    
     }
-    drawImage(index);
+    registerEvent(index,save,testImageColorArray[index]);
+    drawImage();
 }
 function toColor(id) {
         let [r,g,b,a] = [(id>>24)&0xFF,(id>>16)&0xFF,(id>>8)&0xFF,id&0xFF];
@@ -438,7 +521,7 @@ function drawImage(something=0) {
         }
     }
 }
-function toRobeFile() {
+function updateBufferCanvas() {
     let bufferCanvas = document.getElementById("imageBuffer");
     let context = bufferCanvas.getContext("2d");
     bufferCanvas.width=56;
@@ -447,6 +530,10 @@ function toRobeFile() {
         context.fillStyle=toColor(testImageColorArray[i]);
         context.fillRect(i*2,0,2,2);
     }
+}
+function toRobeFile() {
+    updateBufferCanvas();
+    let bufferCanvas = document.getElementById("imageBuffer");
     let text = bufferCanvas.toDataURL();
     let seperator = "***BREAK***";
     text=text.slice(text.indexOf("base64,")+7);
@@ -457,6 +544,17 @@ function toRobeFile() {
     a.href=URL.createObjectURL(blob);
     a.click();
     URL.revokeObjectURL(a.href);
+}
+function savestrip() {
+    updateBufferCanvas();
+    let bufferCanvas = document.getElementById("imageBuffer");
+    bufferCanvas.toBlob((blob)=>{
+        let a = document.createElement("a");
+        a.download="Strip.png";
+        a.href=URL.createObjectURL(blob);
+        a.click();
+        URL.revokeObjectURL(a.href);
+    });
 }
 </script>
 </body>
