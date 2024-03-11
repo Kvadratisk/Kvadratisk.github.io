@@ -89,7 +89,7 @@ function eyeTrigger(event) {
     if (cx+28<0 || cx+28>bounds.width || cy+28<0 || cy+28>bounds.height) {
         return;
     }
-    let imgdat1 = ctx.getImageData(cx+27,cy+27,1,1);
+    let imgdat1 = ctx.getImageData(cx+28,cy+28,1,1);
     let tmpCol = toColor(Number.parseInt((BigInt(imgdat1.data[0])<<24n)+BigInt(imgdat1.data[1]<<16|imgdat1.data[2]<<8|imgdat1.data[3])));
     color.value=tmpCol.slice(0,7);
     color2.value=tmpCol;
