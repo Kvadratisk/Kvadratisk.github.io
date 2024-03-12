@@ -618,9 +618,23 @@ function toRobeFile() {
     let text = bufferCanvas.toDataURL();
     let seperator = "***BREAK***";
     text=text.slice(text.indexOf("base64,")+7);
-    text=document.getElementById("displayName").value+seperator+document.getElementById("description").value+seperator+document.getElementById("designer").value+seperator+text;
+    let tmp = document.getElementById("description").value;
+    for (let i = 0; i < tmp.length-1; i++) {
+        if (tmp[i]=="\\" && tmp[i+1].toLowerCase()=="n") {
+            tmp=tmp.slice(0,i).concat("\n".concat(tmp.slice(i+2)));
+        }
+    }
+    text=document.getElementById("displayName").value+seperator+tmp+seperator+document.getElementById("designer").value+seperator+text;
     let blob = new Blob([text]);
     let a = document.createElement("a");
+    let defaultName = "CustomRobe";
+    if (document.getElementById("displayName").value.length>0) {
+        tmp=document.getElementById("displayName").value;
+        if (!tmp.includes("<")) {
+            defaultName=tmp;
+        }
+    }
+    a.download=defaultName+".robe";
     a.download=document.getElementById("displayName").value+".robe";
     a.href=URL.createObjectURL(blob);
     a.click();
