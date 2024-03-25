@@ -611,10 +611,22 @@ function testFile() {
                         }
                         pos=colArray.push(id)-1;
                     }
-                    tmpArr.push(pos);
+                    //tmpArr.push(pos);
                 }
             }
             if (!valid) return;
+            let sorted = [];
+            for (let i = 0; i < colArray.length; i++) {
+                sorted[(colArray[i]>>24)&0xFF]=colArray[i];
+            }
+            colArray=sorted.filter((x)=>{return x!=null;});
+            for (let l = 0; l < img.height; l++) {
+                for (let i = 0; i < img.width; i++) {
+                    let id = Number.parseInt(BigInt(imageData.data[(l*img.width+i)*4])<<24n | BigInt((imageData.data[(l*img.width+i)*4+1]<<16)|(imageData.data[(l*img.width+i)*4+2]<<8)|(imageData.data[(l*img.width+i)*4+3])));
+                    let pos = colArray.indexOf(id);
+                    tmpArr.push(pos);
+                }
+            }
             testImageColorArray=colArray;
             testImageIndexArray=tmpArr;
             viewPortX=Math.min(128,img.width);
