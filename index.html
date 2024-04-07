@@ -45,6 +45,10 @@ canvas {
 <img id="testImage" style="display:none;"></img><canvas style="display:none;" id="imageBuffer"></canvas>
 <canvas id="eyeDrop" style="display:none;" onclick="eyeTrigger(event);"></canvas>
 <script>
+history.pushState(null, null, document.URL);
+window.addEventListener('popstate', function () {
+    history.pushState(null, null, document.URL);
+});
 var lastSelectedRobe = -1;
 function updateText() {
     let str = document.getElementById("displayName").value;
