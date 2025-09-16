@@ -1,0 +1,1002 @@
+<html>
+<head>
+<style>
+canvas {
+position:absolute;
+top:0px;
+left:0px;
+image-rendering:pixelated;
+}
+body {
+background-color:#000000;
+}
+</style>
+<title>Hello</title>
+</head>
+<body>
+<canvas id="screen"></canvas>
+<script>
+const ctxCanvas = document.getElementById("screen");
+const ctx = ctxCanvas.getContext("2d");
+var width = 1;
+var height = 1;
+var smu = 1;
+var overrideSMU = null;
+var lastFrame = 0;
+var deltaTime = 0;
+var strBufferProcess = false;
+var curLines = 0;
+var curColumns = 0;
+var cursor = [
+	0,0
+];
+var textDisplayVars = {
+	linOff : 0,
+	xOff : 0,
+	charXdistance : 1,
+	charYdistance : 1,
+	line_wrap : false,
+	line_number : false
+};
+window.onclick=function(event) {
+	textDisplayVars.line_wrap=!textDisplayVars.line_wrap;
+}
+window.onresize=function() {
+	width = ctxCanvas.width = window.innerWidth;
+	height = ctxCanvas.height = window.innerHeight;
+	smu = Math.min(width,height)/500;
+	if (smu>1) smu=Math.round(smu);
+	smu=smu<1?1:smu;
+	if (overrideSMU!=null) smu=overrideSMU;
+};
+window.onload=function() {
+	window.onresize();
+	window.requestAnimationFrame(update);
+}
+function insert(x,y,code) {
+	let offset = newLineOffsets[y] || 0;
+	let partA = strBuffer.slice(0,offset);
+	let partB = strBuffer.slice(newLineOffsets[y+1] || strBuffer.length);
+	let partC = strBuffer.slice(offset,(newLineOffsets[y+1] || strBuffer.length));
+	let arr = code;
+	if (typeof arr != "array") arr=[arr];
+	partC=partC.slice(0,x).concat(arr.concat(partC.slice(x,partC.length)));
+	strBuffer=partA.concat(partC.concat(partB));
+	newLineOffsets=newLineOffsets.slice(0,y);
+	if (newLineOffsets.length==0) newLineOffsets.push(0);
+	for (let i = newLineOffsets[y-1] || 0; i < strBuffer.length; i++) {
+		if (strBuffer[i]==10) {
+			newLineOffsets.push(i+1);
+		}
+	}
+}
+function remove(x,y,count=1) {
+	let offset = newLineOffsets[y];
+	if (offset+x<0) return;
+	strBuffer=strBuffer.slice(0,offset+x).concat(strBuffer.slice(offset+x+count));
+	console.log(strBuffer,offset,x,newLineOffsets);
+	newLineOffsets=newLineOffsets.slice(0,y);
+	if (newLineOffsets.length==0) newLineOffsets.push(0);
+	for (let i = newLineOffsets[y-1] || 0; i < strBuffer.length; i++) {
+		if (strBuffer[i]==10) {
+			newLineOffsets.push(i+1);
+		}
+	}
+}
+var processed = false;
+window.onkeydown=function(event) {
+	let c = event.code;
+	if (processed) return;
+	processed = true;
+	console.log(event);
+	if (event.ctrlKey) {
+	console.log("POOP");
+	switch (c) {
+		case "KeyS":
+			cursor[1]++;
+			if (cursor[1]>=curLines) {
+				cursor[1]--;
+				textDisplayVars.linOff=Math.min(newLineOffsets.length-1,textDisplayVars.linOff+1);
+			}
+			cursor[0]=Math.min(cursor[0],(newLineOffsets[textDisplayVars.linOff+cursor[1]+1] || strBuffer.length+1)-(newLineOffsets[textDisplayVars.linOff+cursor[1]])-1);
+			break;
+		case "KeyW":
+			cursor[1]--;
+			if (cursor[1]<0) {
+				cursor[1]=0;
+				textDisplayVars.linOff=Math.max(0,textDisplayVars.linOff-1);
+			}
+			cursor[0]=Math.min(cursor[0],(newLineOffsets[textDisplayVars.linOff+cursor[1]+1] || strBuffer.length+1)-(newLineOffsets[textDisplayVars.linOff+cursor[1]])-1);
+			break;
+		case "KeyD":
+			textDisplayVars.xOff+=5+textDisplayVars.charXdistance;
+			break;
+		case "KeyA":
+			textDisplayVars.xOff=Math.max(0,textDisplayVars.xOff-(5+textDisplayVars.charXdistance));
+			break;
+		case "Minus":
+			overrideSMU=overrideSMU==null?smu:Math.min(1024,overrideSMU+1);
+			break;
+		case "Slash":
+			overrideSMU=overrideSMU==null?smu:Math.max(1,overrideSMU-1);
+			break;
+	}
+	smu=overrideSMU==null?smu:overrideSMU;
+	} else {
+		let scratch = 0;
+		let scratchpad = 0;
+		if (c.startsWith("Digit")) {
+			insert(cursor[0],textDisplayVars.linOff+cursor[1],c.charCodeAt(5));
+			cursor[0]++;
+		} else {
+		switch (c) {
+			case "ArrowUp":
+				cursor[1]--;
+				if (cursor[1]<0) {
+					cursor[1]=0;
+					textDisplayVars.linOff=Math.max(0,textDisplayVars.linOff-1);
+				}
+				cursor[0]=Math.min(cursor[0],(newLineOffsets[textDisplayVars.linOff+cursor[1]+1] || strBuffer.length+1)-(newLineOffsets[textDisplayVars.linOff+cursor[1]])-1);
+				break;
+			case "ArrowDown":
+				cursor[1]++;
+				if (cursor[1]>=curLines) {
+					cursor[1]--;
+					textDisplayVars.linOff=Math.min(newLineOffsets.length-1,textDisplayVars.linOff+1);
+				}
+				cursor[0]=Math.min(cursor[0],(newLineOffsets[textDisplayVars.linOff+cursor[1]+1] || strBuffer.length+1)-(newLineOffsets[textDisplayVars.linOff+cursor[1]])-1);
+				break;
+			case "ArrowLeft":
+				cursor[0]--;
+				if (cursor[0]<0) {
+					scratch = cursor[1];
+					cursor[1]--;
+					if (cursor[1]<0) {
+						textDisplayVars.linOff=Math.max(0,textDisplayVars.linOff-1);
+						cursor[1]=0;
+					}
+					if (cursor[1]!=scratch) {
+					scratch = newLineOffsets[textDisplayVars.linOff-1+cursor[1]+1] || 0;
+					cursor[0]=Math.max(0,newLineOffsets[textDisplayVars.linOff+cursor[1]+1]-scratch-2);
+					} else {
+						cursor[0]=0;
+					}
+				}
+				break;
+			case "ArrowRight":
+				cursor[0]++;
+				scratch = newLineOffsets[textDisplayVars.linOff+cursor[1]];
+				scratchPad = textDisplayVars.linOff+cursor[1];
+				if (scratchPad+1>=newLineOffsets.length) {
+					scratch = strBuffer.length-scratch;
+				} else {
+					scratch = newLineOffsets[textDisplayVars.linOff+cursor[1]+1] - scratch - 1;
+				}
+				if (cursor[0]>scratch) {
+					cursor[0]=0;
+					cursor[1]++;
+					if (cursor[1]>curLines) {
+						cursor[1]=curLines;
+						textDisplayVars.linOff=Math.min(newLineOffsets.length-1,textDisplayVars.linOff+1);
+					}
+					if (cursor[1]>newLineOffsets.length-2) {
+						cursor[0]=scratch;
+						cursor[1]--;
+					}
+				}
+				if (cursor[0]>curColumns) {
+					
+				}
+				break;
+			case "AltLeft":
+			case "AltRight":
+				break;
+			case "ControlLeft":
+			case "ControlRight":
+				break;
+			case "ShiftLeft":
+			case "ShiftRight":
+				break;
+			case "Backspace":
+				remove(cursor[0]-1,cursor[1]+textDisplayVars.linOff);
+				cursor[0]--;
+				if (cursor[0]<0) {
+					scratch = cursor[1];
+					cursor[1]--;
+					if (cursor[1]<0) {
+						textDisplayVars.linOff=Math.max(0,textDisplayVars.linOff-1);
+						cursor[1]=0;
+					}
+					if (cursor[1]!=scratch) {
+					scratch = newLineOffsets[textDisplayVars.linOff-1+cursor[1]+1] || 0;
+					if (textDisplayVars.linOff+cursor[1]+2<newLineOffsets.length) {
+						cursor[0]=Math.max(0,newLineOffsets[textDisplayVars.linOff+cursor[1]+1]-scratch-2);
+					} else {
+						cursor[0]=Math.max(0,strBuffer.length-scratch);
+					}
+					} else {
+						cursor[0]=0;
+					}
+				}
+				break;
+			case "Enter":
+				insert(cursor[0],textDisplayVars.linOff+cursor[1],10);
+				cursor[1]++;
+				cursor[0]=0;
+				break;
+			case "Tab":
+				insert(cursor[0],textDisplayVars.linOff+cursor[1],9);
+				cursor[0]++;
+				break;
+			case "Space":
+			case "space":
+				insert(cursor[0],textDisplayVars.linOff+cursor[1],20);
+				cursor[0]++;
+				
+				break;
+			case "CapsLock":
+				break;
+			default:
+				scratch=c.slice(3);
+				if (!event.shiftKey) scratch=scratch.toLowerCase();
+				insert(cursor[0],textDisplayVars.linOff+cursor[1],scratch.charCodeAt(0));
+				cursor[0]++;
+				console.log(cursor[0]);
+				break;
+			}
+		}
+	}
+	event.preventDefault();
+	event.stopPropagation();
+}
+window.ondrop=function(event) {
+	let list = event.dataTransfer.files;
+	if (list != null && list.length>0) {
+		let reader = new FileReader();
+		reader.onload=function() {
+			strBuffer=Array.from(new Uint8Array(reader.result));
+			prepareBuffer();
+			strBufferProcess=false;
+		}
+		strBufferProcess=true;
+		reader.readAsArrayBuffer(list[0]);
+	}
+	event.preventDefault();
+}
+window.ondrag=window.ondragstart=window.ondragend=window.ondragenter=window.ondragleave=window.ondragover=function(event) {
+	event.preventDefault();
+}
+var timeOut = 0;
+var btimeOut = 0;
+function update(time) {
+	deltaTime=(time-lastFrame)/1000;
+	lastFrame=time;
+	timeOut+=deltaTime;
+	btimeOut+=deltaTime;
+	if (btimeOut>=0.05) { 
+		processed=false;
+		btimeOut=0;
+	}
+	if (timeOut>=0.1) {
+		ctx.clearRect(0,0,width,height);
+		drawText(textDisplayVars.linOff,textDisplayVars.xOff,50,width-50,50,height-50);
+		timeOut=0;
+	}
+	window.requestAnimationFrame(update);
+}
+var strBuffer = [];
+var newLineOffsets = [];
+var chars = [
+	0, // null character
+	0, // start of heading
+	0, // start of text
+	0, // end of text
+	0, // end of transmission
+	0, // enquiry
+	0, // acknowledge
+	0, // bell, alert
+	0, // backspace
+	0x86, // horizontal tab
+	5*4+3, // tab width
+	0,3,5*4+2,1,
+	20,2,1,3,
+	19,1,1,1,
+	19,5,1,1,
+	18,0,1,1,
+	18,6,1,1,
+	0x89, // line feed
+	11,
+	0,0,11,1,
+	0,6,11,1,
+	0,1,1,5,
+	10,1,1,5,
+	2,1,4,4,
+	4,5,2,1,
+	7,4,3,2,
+	7,2,2,1,
+	9,2,1,2,
+	0, // vertical tabulation
+	0, // form feed
+	0x90, // carriage return
+	11,
+	0,0,11,1,
+	0,6,11,1,
+	0,1,1,5,
+	5,1,1,5,
+	10,1,1,5,
+	2,2,2,3,
+	1,1,1,1,
+	1,5,1,1,
+	4,1,1,1,
+	4,3,1,1,
+	4,5,1,1,
+	7,2,2,1,
+	7,5,2,1,
+	9,1,1,1,
+	9,3,1,2,
+	7,4,1,1,
+	0, // shift out
+	0, // shift in
+	0, // data link escape
+	0, // device control one (XON)
+	0, // device control two
+	0, // device control three (XOFF)
+	0, // device control four
+	0, // negative acknowledge
+	0, // synchronous idle
+	0, // end of transmission block
+	0, // cancel
+	0, // end of medium
+	0, // substitute
+	0, // escape
+	0, // file separator
+	0, // group separator
+	0, // record separator
+	0, // unit separator
+	0, //space
+	2, //exclamation mark
+	2,0,1,5,
+	2,6,1,1,
+	2, // double quotes
+	1,0,1,2,
+	3,0,1,2,
+	4, // number sign
+	0,2,5,1,
+	0,4,5,1,
+	1,1,1,5,
+	3,1,1,5,
+	8, // dollar sign
+	2,0,1,7,
+	1,0,3,1,
+	0,1,1,2,
+	4,1,1,1,
+	1,3,3,1,
+	4,4,1,2,
+	1,6,3,1,
+	0,5,1,1,
+	7, // percent sign
+	0,0,2,2,
+	3,5,2,2,
+	0,5,1,2,
+	4,0,1,2,
+	3,2,1,1,
+	2,3,1,1,
+	1,4,1,1,
+	9, // ampersand
+	0,1,1,2,
+	0,4,1,2,
+	3,1,1,2,
+	3,4,1,2,
+	1,0,2,1,
+	1,3,2,1,
+	1,6,2,1,
+	4,4,1,1,
+	4,6,1,1,
+	1, // single quote
+	2,0,1,2,
+	3, // open parenthesis
+	2,1,1,5,
+	3,0,1,1,
+	3,6,1,1,
+	3, // close parenthesis
+	3,1,1,5,
+	2,0,1,1,
+	2,6,1,1,
+	5, // asterisk
+	1,0,1,1,
+	3,0,1,1,
+	2,1,1,1,
+	1,2,1,1,
+	3,2,1,1,
+	2, // plus
+	2,1,1,5,
+	0,3,5,1,
+	2, // comma
+	2,6,1,2,
+	1,8,1,1,
+	1, // hyphen-minus
+	1,3,3,1,
+	1, // period, dot or full stop
+	1,5,2,2,
+	5, // slash or divide
+	0,6,1,1,
+	1,4,1,2,
+	2,3,1,1,
+	3,1,1,2,
+	4,0,1,1,
+	7, // zero
+	1,0,3,1,
+	1,6,3,1,
+	0,1,1,5,
+	4,1,1,5,
+	3,2,1,1,
+	2,3,1,1,
+	1,4,1,1,
+	3, // one
+	2,0,1,7,
+	1,6,3,1,
+	1,1,1,1,
+	7, // two
+	1,0,3,1,
+	0,6,5,1,
+	0,1,1,1,
+	4,1,1,2,
+	3,3,1,1,
+	2,4,1,1,
+	1,5,1,1,
+	7, // three
+	1,0,3,1,
+	1,6,3,1,
+	0,1,1,1,
+	0,5,1,1,
+	2,3,2,1,
+	4,1,1,2,
+	4,4,1,2,
+	3, // four
+	4,0,1,7,
+	0,0,1,3,
+	1,3,3,1,
+	6, // five
+	0,0,5,1,
+	0,1,1,2,
+	1,6,3,1,
+	0,5,1,1,
+	4,4,1,2,
+	0,3,4,1,
+	6, // six
+	1,0,3,1,
+	0,1,1,5,
+	1,3,3,1,
+	1,6,3,1,
+	4,4,1,2,
+	4,1,1,1,
+	4, // seven
+	0,0,5,1,
+	4,1,1,2,
+	3,3,1,1,
+	2,4,1,3,
+	7, // eight
+	1,0,3,1,
+	1,3,3,1,
+	1,6,3,1,
+	0,1,1,2,
+	0,4,1,2,
+	4,1,1,2,
+	4,4,1,2,
+	6, // nine
+	1,0,3,1,
+	1,3,3,1,
+	1,6,3,1,
+	0,1,1,2,
+	0,5,1,1,
+	4,1,1,5,
+	2, // colon
+	2,3,1,1,
+	2,5,1,1,
+	2, // semicolon
+	2,3,1,1,
+	2,5,1,2,
+	5, // less than
+	3,1,1,1,
+	2,2,1,1,
+	1,3,1,1,
+	2,4,1,1,
+	3,5,1,1,
+	2, // equals
+	1,2,3,1,
+	1,4,3,1,
+	5, // greater than
+	1,1,1,1,
+	2,2,1,1,
+	3,3,1,1,
+	2,4,1,1,
+	1,5,1,1,
+	6, // question mark
+	1,0,3,1,
+	0,1,1,1,
+	4,1,1,2,
+	3,3,1,1,
+	2,4,1,1,
+	2,6,1,1,
+	6, // at sign
+	1,0,3,1,
+	1,5,3,1,
+	0,1,1,4,
+	4,1,1,3,
+	2,2,1,2,
+	3,3,1,1,
+	4, // A
+	1,0,3,1,
+	0,1,1,6,
+	4,1,1,6,
+	1,3,3,1,
+	6, // B
+	0,0,1,7,
+	1,0,3,1,
+	1,3,3,1,
+	1,6,3,1,
+	4,1,1,2,
+	4,4,1,2,
+	5, // C
+	1,0,3,1,
+	0,1,1,5,
+	1,6,3,1,
+	4,1,1,1,
+	4,5,1,1,
+	4, // D
+	0,0,4,1,
+	0,1,1,5,
+	0,6,4,1,
+	4,1,1,5,
+	4, // E
+	0,0,1,7,
+	1,0,4,1,
+	1,6,4,1,
+	1,3,3,1,
+	3, // F
+	0,0,1,7,
+	1,0,4,1,
+	1,3,3,1,
+	5, // G
+	1,0,4,1,
+	1,6,4,1,
+	0,1,1,5,
+	4,3,1,3,
+	2,3,2,1,
+	3, // H
+	0,0,1,7,
+	4,0,1,7,
+	1,3,3,1,
+	1, // I
+	2,0,1,7,
+	3, // J
+	4,0,1,6,
+	1,6,3,1,
+	0,4,1,2,
+	8, // K
+	0,0,1,7,
+	1,3,1,1,
+	2,2,1,1,
+	2,4,1,1,
+	3,1,1,1,
+	3,5,1,1,
+	4,0,1,1,
+	4,6,1,1,
+	2, // L
+	0,0,1,7,
+	1,6,4,1,
+	5, // M
+	0,0,1,7,
+	4,0,1,7,
+	1,1,1,1,
+	3,1,1,1,
+	2,2,1,1,
+	5, // N
+	0,0,1,7,
+	4,0,1,7,
+	1,2,1,1,
+	2,3,1,1,
+	3,4,1,1,
+	4, // O
+	1,0,3,1,
+	1,6,3,1,
+	0,1,1,5,
+	4,1,1,5,
+	4, // P
+	0,0,1,7,
+	1,0,3,1,
+	1,3,3,1,
+	4,1,1,2,
+	7, // Q
+	0,1,1,5,
+	4,1,1,5,
+	1,0,3,1,
+	1,6,3,1,
+	3,5,1,1,
+	2,4,1,1,
+	4,7,1,1,
+	5, // R
+	0,0,1,7,
+	1,0,3,1,
+	1,3,3,1,
+	4,1,1,2,
+	4,4,1,3,
+	7, // S
+	1,0,3,1,
+	1,6,3,1,
+	0,1,1,2,
+	4,4,1,2,
+	1,3,3,1,
+	4,1,1,1,
+	0,5,1,1,
+	2, // T
+	0,0,5,1,
+	2,1,1,6,
+	3, // U
+	0,0,1,6,
+	4,0,1,6,
+	1,6,3,1,
+	5, // V
+	0,0,1,3,
+	4,0,1,3,
+	1,3,1,2,
+	3,3,1,2,
+	2,5,1,2,
+	5, // W
+	0,0,1,5,
+	4,0,1,5,
+	1,5,1,2,
+	3,5,1,2,
+	2,3,1,2,
+	9, // X
+	0,0,1,2,
+	4,0,1,2,
+	0,5,1,2,
+	4,5,1,2,
+	1,2,1,1,
+	1,4,1,1,
+	2,3,1,1,
+	3,2,1,1,
+	3,4,1,1,
+	5, // Y
+	0,0,1,2,
+	4,0,1,2,
+	1,2,1,1,
+	3,2,1,1,
+	2,3,1,4,
+	7, // Z
+	0,0,5,1,
+	4,1,1,1,
+	3,2,1,1,
+	2,3,1,1,
+	1,4,1,1,
+	0,5,1,1,
+	0,6,5,1,
+	3, // opening bracket
+	2,0,1,7,
+	3,0,1,1,
+	3,6,1,1,
+	5, // backslash
+	1,1,1,2,
+	3,4,1,2,
+	2,3,1,1,
+	0,0,1,1,
+	4,6,1,1,
+	3, // closing bracket
+	3,0,1,7,
+	2,0,1,1,
+	2,6,1,1,
+	3, // caret - circumflex
+	2,0,1,1,
+	1,1,1,1,
+	3,1,1,1,
+	1, // underscore
+	0,6,5,1,
+	2, // grave accent
+	1,0,1,1,
+	2,1,1,1,
+	5, // a
+	1,6,4,1,
+	4,3,1,3,
+	1,4,3,1,
+	1,2,3,1,
+	0,5,1,1,
+	4, // b
+	0,0,1,7,
+	1,6,3,1,
+	1,2,3,1,
+	4,3,1,3,
+	5, // c
+	4,3,1,1,
+	4,5,1,1,
+	0,3,1,3,
+	1,6,3,1,
+	1,2,3,1,
+	4, // d
+	4,0,1,7,
+	1,6,3,1,
+	1,2,3,1,
+	0,3,1,3,
+	5, // e
+	0,3,1,3,
+	1,2,3,1,
+	1,4,3,1,
+	1,6,3,1,
+	4,3,1,2,
+	4, // f
+	2,0,1,7,
+	3,0,1,1,
+	1,2,1,1,
+	3,2,1,1,
+	5, // g
+	1,2,3,1,
+	0,3,1,3,
+	1,6,3,1,
+	4,3,1,5,
+	0,8,4,1,
+	3, // h
+	0,0,1,7,
+	4,3,1,4,
+	1,2,3,1,
+	2, // i
+	2,0,1,1,
+	2,2,1,5,
+	4, // j
+	4,2,1,6,
+	4,0,1,1,
+	1,8,3,1,
+	0,7,1,1,
+	6, // k
+	1,0,1,7,
+	2,4,1,1,
+	3,3,1,1,
+	3,5,1,1,
+	4,2,1,1,
+	4,6,1,1,
+	2, // l
+	1,0,1,6,
+	2,6,2,1,
+	5, // m
+	0,2,1,5,
+	2,3,1,4,
+	4,3,1,4,
+	1,2,1,1,
+	3,2,1,1,
+	3, // n
+	0,2,1,5,
+	1,2,3,1,
+	4,3,1,4,
+	4, // o
+	1,6,3,1,
+	1,2,3,1,
+	0,3,1,3,
+	4,3,1,3,
+	4, // p
+	0,2,1,7,
+	1,2,3,1,
+	1,6,3,1,
+	4,3,1,3,
+	4, // q
+	4,2,1,7,
+	1,2,3,1,
+	1,6,3,1,
+	0,3,1,3,
+	4, // r
+	0,2,1,5,
+	1,4,1,1,
+	2,3,1,1,
+	3,2,2,1,
+	5, // s
+	1,2,4,1,
+	0,6,4,1,
+	1,4,3,1,
+	0,3,1,1,
+	4,5,1,1,
+	4, // t
+	0,2,5,1,
+	1,0,1,6,
+	2,6,2,1,
+	4,5,1,1,
+	3, // u
+	0,2,1,4,
+	4,2,1,5,
+	1,6,3,1,
+	5, // v
+	0,2,1,2,
+	1,4,1,2,
+	4,2,1,2,
+	3,4,1,2,
+	2,6,1,1,
+	5, // w
+	0,2,1,4,
+	2,2,1,4,
+	4,2,1,4,
+	1,6,1,1,
+	3,6,1,1,
+	9, // x
+	0,2,1,1,
+	4,2,1,1,
+	1,3,1,1,
+	3,3,1,1,
+	2,4,1,1,
+	1,5,1,1,
+	3,5,1,1,
+	0,6,1,1,
+	4,6,1,1,
+	4, // y
+	0,2,1,4,
+	4,2,1,6,
+	1,6,3,1,
+	0,8,4,1,
+	5, // z
+	0,2,5,1,
+	0,6,5,1,
+	4,3,1,1,
+	0,5,1,1,
+	1,4,3,1,
+	5, // opening brace
+	3,0,1,1,
+	3,6,1,1,
+	2,1,1,2,
+	2,4,1,2,
+	1,3,1,1,
+	1, // vertical bar
+	2,0,1,7,
+	5, // closing brace
+	1,0,1,1,
+	1,6,1,1,
+	2,1,1,2,
+	2,4,1,2,
+	3,3,1,1,
+	5, // equivalence sign - tilde
+	0,3,1,1,
+	1,2,1,1,
+	2,3,1,1,
+	3,4,1,1,
+	4,3,1,1,
+	0, // delete
+];
+var updateBuff = [];
+function drawLetter(x,y,id,xPoff=0,xPmax=1024) {
+	let offset = 0;
+	for (let i = 0; i < id; i++) {
+		let t = chars[offset];
+		if (t&0x80) offset++;
+		offset+=1+((t&0x7F)<<2);
+	}
+	let loops = chars[offset++];
+	let s = 5;
+	if (loops&0x80) {
+		loops&=0x7F;
+		s = chars[offset++];
+	}
+	for (let i = 0; i < loops; i++) {
+		let xStart = chars[offset++]-xPoff;
+		let yStart = chars[offset++];
+		let xLength = chars[offset++];
+		if (xStart<=0) {
+			xLength=Math.max(0,xLength+xStart);
+			xStart=0;
+		}
+		xStart=xStart*smu+x;
+		xLength=xLength*smu;
+		if (xStart>=xPmax) {
+			offset++;
+			continue;
+		}
+		if (xStart+xLength>=xPmax) {
+			xLength=xPmax-xStart;
+		}
+		ctx.fillRect(xStart,yStart*smu+y,xLength,smu*chars[offset++]);
+	}
+	return s;
+}
+function drawText(lineOffset = 0, xOffset = 0, minX = 0, maxX = width, minY = 0, maxY = height) {
+	if (strBufferProcess) return;
+	ctx.fillStyle="#FFFFFF";
+	if ((maxX-minX)<smu*5) maxX=minX+smu*5;
+	if ((maxY-minY)<smu*7) maxY=minY+smu*7;
+	let x = minX;
+	let y = minY;
+	let offset = newLineOffsets[Math.min(newLineOffsets.length, lineOffset)] || 0;
+	let maxHeight = Math.ceil((maxY-minY)/(smu*10));
+	let maxWidth = Math.ceil((maxX-minX)/(smu*6));
+	curLines=maxHeight;
+	let xLineOff = textDisplayVars.charXdistance;
+	let xActual = xOffset+xLineOff;
+	let numMax = newLineOffsets.length.toString().length-1;
+	for (let l1 = 0; l1 < maxHeight; l1++) {
+		if (offset>=strBuffer.length && (!(maxHeight>cursor[1] && l1<=cursor[1]))) break;
+		x=minX;
+		let xDist = 0;
+		let xPoff = 0;
+		let skip = false;
+		if (textDisplayVars.line_number) {
+			let num = (lineOffset+1+l1).toString();
+			for (let c = numMax-num.length;c>=0; c--) {
+				num="\x00"+num;
+			}
+			for (let l2 = 0; l2 < num.length; l2++) {
+				let s = drawLetter(x,y,num.charCodeAt(l2));
+				x+=((xLineOff+s)*smu);
+			}
+			x+=smu*2;
+		}
+		for (let l2 = 0; l2 < xOffset; l2++) {
+			if (offset>=strBuffer.length) break;
+			let s = strBuffer[offset];
+			let scrap = 0;
+			for (let l3 = 0; l3 < s; l3++) {
+				if (scrap>=chars.length) break;
+				let t = chars[scrap];
+				if (t&0x80) scrap++;
+				scrap+=1+((t&0x7F)<<2);
+			}
+			let dist = 5+xLineOff;
+			s = chars[scrap];
+			if (s&0x80) {
+				dist = chars[scrap+1]+xLineOff;
+			}
+			xDist+=dist;
+			if (xDist>=xActual) {
+				xPoff=dist-(xDist-xActual)-1;
+				break;
+			}
+			if (strBuffer[offset++]==10) {
+				skip=true;
+				break;
+			}
+		}
+		if (!skip) {
+			for (let l2 = 0; l2 <= maxWidth; l2++) {
+				if (l1==cursor[1] && xOffset+l2==cursor[0]) {
+					ctx.fillRect(x+smu,y,smu,smu*7);
+					x+=smu*3;
+				}
+				if (offset>=strBuffer.length) break;
+				let c = strBuffer[offset++];
+				let s = drawLetter(x,y,c,xPoff,maxX);
+				x+=smu*((s-xPoff)+xLineOff);
+				xPoff=0;
+				if (c==10) break;
+				if (x<maxX && l2+1!=maxWidth) continue;
+				if (textDisplayVars.line_wrap) break;
+				while (offset<strBuffer.length && c!=10) {
+					c=strBuffer[offset++];
+				}
+				break;
+			}
+		}
+		y+=smu*10;
+	}
+}
+function prepareBuffer() {
+	newLineOffsets=[0];
+	for (let i = 0; i < strBuffer.length; i++) {
+		if (typeof strBuffer[i]=="string") strBuffer[i]=strBuffer[i].charCodeAt(0);
+		if (strBuffer[i]!=10) continue;
+		newLineOffsets.push(i+1);
+	}
+	textDisplayVars.linOff=0;
+	textDisplayVars.xOff=0;
+}
+let str = "Test";
+str = str.split("");
+strBuffer=str;
+prepareBuffer();
+const colors = {
+	indicator : "#FFFFFF"
+};
+class Indicator {
+	constructor(line=0,xOffset=0,color=null) {
+		this.line=line;
+		this.xOffset=xOffset;
+		this.color=color || colors.indicator;
+	}
+	requestMovement(direction=0,steps=0,mode=0) {
+		
+	}
+}
+</script>
+</body>
+</html>
